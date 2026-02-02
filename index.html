@@ -1,738 +1,746 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Upload, Zap, Activity, Radio, Sun, Wind, Droplets, Flame, Battery, Menu, X, Info, Layers, Waves, Leaf, Filter, Construction, Map as MapIcon, Palette, Eraser, DownloadCloud } from 'lucide-react';
-
-// --- STYLES ---
-
-const delayClasses = Array.from({ length: 30 }).map((_, i) => `
-  .delay-${i} {
-    animation-delay: ${i * 0.2}s !important;
-  }
-`).join('');
-
-const styles = `
-  @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap');
-  
-  :root {
-    --font-geist: 'Geist', sans-serif;
-    --font-geist-mono: 'Geist Mono', monospace;
-  }
-
-  body {
-    font-family: var(--font-geist);
-  }
-
-  ::-webkit-scrollbar { width: 8px; height: 8px; }
-  ::-webkit-scrollbar-track { background: #171717; }
-  ::-webkit-scrollbar-thumb { background: #404040; border-radius: 4px; }
-  ::-webkit-scrollbar-thumb:hover { background: #525252; }
-
-  .leaflet-popup-content-wrapper {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(4px);
-    border-radius: 8px;
-    padding: 0;
-    overflow: hidden;
-  }
-  .leaflet-popup-content { margin: 10px; width: auto !important; }
-  .leaflet-container { background: #171717; width: 100%; height: 100%; }
-
-  /* --- ANIMATIONS --- */
-  
-  @keyframes breathe {
-    0%, 60% {
-      stroke-opacity: 0.2;
-      stroke-width: 1px;
-      stroke: #5eead4;
-      filter: drop-shadow(0 0 0px rgba(94, 234, 212, 0));
-    }
-    80% {
-      stroke-opacity: 1;
-      stroke-width: 3px;
-      stroke: #ffffff;
-      filter: drop-shadow(0 0 6px rgba(94, 234, 212, 0.9));
-    }
-    100% {
-      stroke-opacity: 0.2;
-      stroke-width: 1px;
-      stroke: #5eead4;
-      filter: drop-shadow(0 0 0px rgba(94, 234, 212, 0));
-    }
-  }
-
-  .pulse-line {
-    stroke-dasharray: none !important;
-    stroke-linecap: round;
-    animation: breathe 6s ease-in-out infinite;
-    z-index: 1000;
-  }
-
-  ${delayClasses}
-
-  .planned-line {
-    stroke-dasharray: 5, 10;
-    opacity: 0.5;
-  }
-`;
-
-// --- Utility Functions ---
-
-const getVoltageCategory = (voltage) => {
-  const v = Number(voltage);
-  if (v >= 750) return '750+';
-  if (v >= 600) return '600';
-  if (v >= 500) return '500';
-  if (v >= 440) return '440';
-  if (v >= 345) return '345';
-  if (v >= 230) return '230';
-  return '138-';
-};
-
-const getVoltageColor = (voltage, grayMode = false) => {
-  if (grayMode) return '#2dd4bf'; // Verde água padrão (Teal-400)
-  
-  const v = Number(voltage);
-  if (v >= 750) return '#7c3aed';
-  if (v >= 600) return '#db2777';
-  if (v >= 500) return '#ef4444';
-  if (v >= 440) return '#f59e0b';
-  if (v >= 345) return '#eab308';
-  if (v >= 230) return '#22c55e';
-  if (v >= 138) return '#3b82f6';
-  return '#64748b';
-};
-
-const getPlantCategory = (typeId, typeName) => {
-  const t = (typeId || '').toUpperCase();
-  const n = (typeName || '').toUpperCase();
-  if (t === 'UHE' || n.includes('HIDRO')) return 'Hidrelétrica';
-  if (t === 'UTE' || n.includes('TERMICA')) return 'Térmica';
-  if (t === 'EOL' || n.includes('EOLICA') || n.includes('EOLIELETRICA')) return 'Eólica';
-  if (t === 'UFV' || n.includes('SOLAR')) return 'Solar';
-  if (t === 'UCN' || n.includes('NUCLEAR')) return 'Nuclear';
-  return 'Outros';
-};
-
-const getPlantColor = (category) => {
-  switch (category) {
-    case 'Hidrelétrica': return '#3b82f6';
-    case 'Térmica': return '#f97316';
-    case 'Eólica': return '#22d3ee';
-    case 'Solar': return '#fbbf24';
-    case 'Nuclear': return '#a855f7';
-    case 'Outros': return '#10b981'; 
-    default: return '#9ca3af';
-  }
-};
-
-const getDistance = (lat1, lng1, lat2, lng2) => {
-  return Math.sqrt(Math.pow(lat2 - lat1, 2) + Math.pow(lng2 - lng1, 2));
-};
-
-const isOperational = (props) => {
-  if (props.DTENTRADA) {
-    const entryDate = new Date(props.DTENTRADA);
-    if (entryDate > new Date()) return false;
-  } else if (props.DTPREVISTA) {
-    return false;
-  }
-  return true; 
-};
-
-// --- Helper Components ---
-
-const FileUploader = ({ label, accept, onFileLoaded, loaded, icon: Icon, loading }) => {
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const json = JSON.parse(event.target.result);
-        onFileLoaded(json);
-      } catch (err) {
-        alert("Erro ao ler JSON: " + err.message);
-      }
-    };
-    reader.readAsText(file);
-  };
-
-  return (
-    <div className={`flex items-center justify-between p-3 mb-2 rounded-lg border transition-all duration-200 ${loaded ? 'bg-emerald-900/20 border-emerald-500/50' : 'bg-neutral-800 border-neutral-700 hover:border-neutral-500'}`}>
-      <div className="flex items-center gap-3 overflow-hidden">
-        <div className={`p-2 rounded-md ${loaded ? 'bg-emerald-500/20 text-emerald-400' : 'bg-neutral-700 text-neutral-400'}`}>
-          <Icon size={18} />
-        </div>
-        <div className="flex flex-col min-w-0">
-          <span className="text-sm font-medium text-neutral-200 truncate pr-2">{label}</span>
-          <span className="text-xs text-neutral-500 font-mono flex items-center gap-1">
-            {loading ? (
-              <span className="animate-pulse">Buscando dados...</span>
-            ) : (
-              loaded ? 'Carregado' : 'Aguardando arquivo...'
-            )}
-          </span>
-        </div>
-      </div>
-      <label className="cursor-pointer px-3 py-1.5 text-xs font-medium bg-neutral-700 hover:bg-neutral-600 text-white rounded-md transition-colors whitespace-nowrap">
-        {loaded ? 'Trocar' : 'Carregar'}
-        <input type="file" accept={accept} onChange={handleFileChange} className="hidden" />
-      </label>
-    </div>
-  );
-};
-
-const LegendItem = ({ color, label, subLabel }) => (
-  <div className="flex items-center gap-3 py-1">
-    <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: color }}></div>
-    <div className="flex flex-col">
-      <span className="text-xs text-neutral-300 font-medium">{label}</span>
-      {subLabel && <span className="text-[10px] text-neutral-500">{subLabel}</span>}
-    </div>
-  </div>
-);
-
-// --- Main App Component ---
-
-export default function App() {
-  // Data States
-  const [transmissao, setTransmissao] = useState(null);
-  const [dc, setDc] = useState(null);
-  const [subestacoes, setSubestacoes] = useState(null);
-  const [usinas, setUsinas] = useState(null);
-  
-  // Loading States for auto-fetch
-  const [loadingStates, setLoadingStates] = useState({
-    transmissao: false,
-    dc: false,
-    subestacoes: false,
-    usinas: false
-  });
-  
-  // UI States
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [activeTab, setActiveTab] = useState('files');
-  const [leafletReady, setLeafletReady] = useState(false);
-  
-  // Modes
-  const [pulseMode, setPulseMode] = useState(false);
-  const [pulsingLines, setPulsingLines] = useState(new Map()); 
-  const [selectedPlant, setSelectedPlant] = useState(null); // {lat, lng}
-
-  // Filters
-  const [showPlanned, setShowPlanned] = useState(false); 
-  const [grayMode, setGrayMode] = useState(false);
-  const [layers, setLayers] = useState({ ac: true, dc: true, subs: true, plants: true });
-  
-  const [voltageFilters, setVoltageFilters] = useState({
-    '750+': true, '600': true, '500': true, '440': true, '345': true, '230': true, '138-': true
-  });
-
-  const [plantFilters, setPlantFilters] = useState({
-    'Hidrelétrica': true, 'Térmica': true, 'Eólica': true, 'Solar': true, 'Nuclear': true, 'Outros': true
-  });
-
-  const mapContainerRef = useRef(null);
-  const mapInstanceRef = useRef(null);
-  const layerGroupsRef = useRef({ ac: null, dc: null, subs: null, plants: null });
-
-  // Load Leaflet
-  useEffect(() => {
-    if (window.L && typeof window.L.map === 'function') {
-      setLeafletReady(true);
-      return;
-    }
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-    document.head.appendChild(link);
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-    script.async = true;
-    script.onload = () => { if (window.L) setLeafletReady(true); };
-    document.body.appendChild(script);
-  }, []);
-
-  // --- AUTO FETCH DATA ON MOUNT ---
-  useEffect(() => {
-    const fetchGeoJSON = async (url, setter, key) => {
-      setLoadingStates(prev => ({ ...prev, [key]: true }));
-      try {
-        const response = await fetch(url);
-        if (response.ok) {
-          const data = await response.json();
-          setter(data);
-        } else {
-          console.warn(`Arquivo não encontrado ou erro ao carregar: ${url}`);
-        }
-      } catch (error) {
-        console.warn(`Falha ao buscar ${url}:`, error);
-      } finally {
-        setLoadingStates(prev => ({ ...prev, [key]: false }));
-      }
-    };
-
-    // Tenta carregar os arquivos da raiz (útil para GitHub Pages)
-    fetchGeoJSON('transmissao.geojson', setTransmissao, 'transmissao');
-    fetchGeoJSON('correntecontinua.geojson', setDc, 'dc');
-    fetchGeoJSON('subestacoes.geojson', setSubestacoes, 'subestacoes');
-    fetchGeoJSON('usinas.geojson', setUsinas, 'usinas');
-  }, []);
-
-  // Initialize Map
-  useEffect(() => {
-    if (!leafletReady || !mapContainerRef.current) return;
-    if (mapInstanceRef.current) { mapInstanceRef.current.remove(); mapInstanceRef.current = null; }
-
-    const L = window.L;
-    if (!L) return;
-
-    try {
-      const map = L.map(mapContainerRef.current, { zoomControl: false, attributionControl: false })
-        .setView([-15.793889, -47.882778], 4);
-      
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap', subdomains: 'abcd', maxZoom: 20
-      }).addTo(map);
-
-      const svgRenderer = L.svg();
-
-      layerGroupsRef.current.ac = L.layerGroup({ renderer: svgRenderer }).addTo(map);
-      layerGroupsRef.current.dc = L.layerGroup({ renderer: svgRenderer }).addTo(map);
-      layerGroupsRef.current.subs = L.layerGroup({ renderer: svgRenderer }).addTo(map);
-      layerGroupsRef.current.plants = L.layerGroup({ renderer: svgRenderer }).addTo(map);
-
-      mapInstanceRef.current = map;
-    } catch (e) { console.error(e); }
-
-    return () => { if (mapInstanceRef.current) { mapInstanceRef.current.remove(); mapInstanceRef.current = null; } };
-  }, [leafletReady]);
-
-  // --- RECURSIVE PULSE LOGIC (BFS) ---
-  const handlePlantPulse = (plantLat, plantLng) => {
-    if (!transmissao || !pulseMode) return;
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIN Interativo - ONS</title>
     
-    setSelectedPlant({ lat: plantLat, lng: plantLng });
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <!-- Fonte Geist -->
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap" rel="stylesheet">
 
-    const QUEUE_LIMIT = 800; 
-    const MAX_DEPTH = 25;
-    const THRESHOLD = 0.4;
-
-    const visitedLines = new Map();
-    const queue = [{ lat: plantLat, lng: plantLng, depth: 0 }];
-    let iterations = 0;
-
-    while (queue.length > 0 && iterations < QUEUE_LIMIT) {
-      const current = queue.shift();
-      if (current.depth >= MAX_DEPTH) continue;
-
-      transmissao.features.forEach((feature, idx) => {
-        if (visitedLines.has(idx)) return;
-        if (!showPlanned && !isOperational(feature.properties)) return; 
-        
-        const vCat = getVoltageCategory(feature.properties.VN);
-        if (!voltageFilters[vCat]) return;
-
-        if (!feature.geometry || !feature.geometry.coordinates) return;
-
-        const coords = feature.geometry.coordinates;
-        // GeoJSON geometry is [lng, lat]
-        const start = coords[0]; 
-        const end = coords[coords.length - 1];
-
-        const distStart = getDistance(current.lat, current.lng, start[1], start[0]);
-        const distEnd = getDistance(current.lat, current.lng, end[1], end[0]);
-
-        if (distStart < THRESHOLD) {
-          visitedLines.set(idx, { reversed: false, depth: current.depth }); 
-          queue.push({ lat: end[1], lng: end[0], depth: current.depth + 1 });
-        } else if (distEnd < THRESHOLD) {
-          visitedLines.set(idx, { reversed: true, depth: current.depth }); 
-          queue.push({ lat: start[1], lng: start[0], depth: current.depth + 1 });
-        }
-      });
-      iterations++;
-    }
-
-    if (visitedLines.size > 0) {
-      setPulsingLines(visitedLines);
-    } else {
-      console.log("Nenhuma linha conectada encontrada.");
-    }
-  };
-
-  const clearPulse = () => {
-    setPulsingLines(new Map());
-    setSelectedPlant(null);
-  };
-
-  const createPopupContent = (title, type, details) => {
-    const detailsHtml = Object.entries(details)
-      .filter(([_, val]) => val)
-      .map(([key, val]) => `
-        <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;">
-          <span style="color: #6b7280; font-family: monospace;">${key}:</span>
-          <span style="color: #1f2937; font-weight: 500; margin-left: 8px; text-align: right;">${val}</span>
-        </div>
-      `).join('');
-    return `<div style="font-family: 'Geist', sans-serif; min-width: 200px;">
-      <h3 style="font-weight: 700; font-size: 13px; margin: 0 0 8px 0; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; color: #111827;">${title || 'Sem Nome'}</h3>
-      <div>${detailsHtml}</div>
-      <div style="margin-top: 8px; padding-top: 4px; border-top: 1px solid #f3f4f6; font-size: 9px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; text-align: right;">${type}</div>
-    </div>`;
-  };
-
-  // Render AC Lines
-  useEffect(() => {
-    if (!mapInstanceRef.current || !layerGroupsRef.current.ac) return;
-    const group = layerGroupsRef.current.ac;
-    group.clearLayers();
-
-    if (transmissao && layers.ac) {
-      const L = window.L;
-      transmissao.features.forEach((f, idx) => {
-        if (!f.geometry || !f.geometry.coordinates) return;
-        
-        const props = f.properties;
-        const operational = isOperational(props);
-        if (!showPlanned && !operational) return; 
-
-        const vCat = getVoltageCategory(props.VN);
-        if (!voltageFilters[vCat]) return;
-
-        let coords = f.geometry.coordinates.map(c => [c[1], c[0]]); // [lat, lng]
-        
-        // --- Pulse Mode Logic ---
-        const pulseData = pulsingLines.get(idx);
-        const isPulsing = !!pulseData;
-        const shouldReversePulse = pulseData?.reversed;
-        const depth = pulseData?.depth || 0;
-        
-        if (pulseMode && isPulsing && shouldReversePulse) {
-            coords = coords.reverse();
+    <!-- Estilos Personalizados -->
+    <style>
+        :root {
+            --font-main: 'Geist', sans-serif;
+            --font-mono: 'Geist Mono', monospace;
         }
 
-        let opacity = 0.8;
-        if (pulseMode) {
-            opacity = isPulsing ? 1.0 : 0.05; 
+        body {
+            font-family: var(--font-main);
+            margin: 0;
+            padding: 0;
+            background-color: #171717;
+            overflow: hidden;
+            color: white;
         }
 
-        const className = [
-          isPulsing ? 'pulse-line' : '',
-          isPulsing ? `delay-${Math.min(depth, 29)}` : '', 
-          (!operational) ? 'planned-line' : ''
-        ].filter(Boolean).join(' '); 
+        /* Scrollbar Customizada */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #171717; }
+        ::-webkit-scrollbar-thumb { background: #404040; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #525252; }
 
-        const polyline = L.polyline(coords, {
-          color: getVoltageColor(props.VN, grayMode), 
-          weight: isPulsing ? 3 : 1.5,
-          opacity: opacity,
-          className: className || undefined,
-          dashArray: operational ? null : '5, 10'
-        });
-
-        if (!pulseMode) {
-          polyline.bindPopup(createPopupContent(props.NOMELONGO, operational ? 'LINHA DE TRANSMISSÃO' : 'EXPANSÃO PLANEJADA', { 
-            'Tensão': `${props.VN} kV`, 
-            'Agente': props.AGE_NOME,
-            'Entrada': props.STR_DTENTRADA || 'N/A',
-            'Previsão': props.STR_DTPREVISTA || 'N/A'
-          }));
+        /* Customização de Popups do Leaflet */
+        .leaflet-popup-content-wrapper {
+            background: rgba(23, 23, 23, 0.95);
+            backdrop-filter: blur(8px);
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 0;
+            color: #fff;
+            font-family: var(--font-main);
         }
-        group.addLayer(polyline);
-      });
-    }
-  }, [transmissao, layers.ac, leafletReady, pulsingLines, pulseMode, showPlanned, grayMode, voltageFilters]);
+        .leaflet-popup-tip {
+            background: rgba(23, 23, 23, 0.95);
+        }
+        .leaflet-popup-content { margin: 12px; width: auto !important; }
+        .leaflet-container { background: #171717; width: 100%; height: 100%; outline: none; font-family: var(--font-main); }
 
-  // Render Plants
-  useEffect(() => {
-    if (!mapInstanceRef.current || !layerGroupsRef.current.plants) return;
-    const group = layerGroupsRef.current.plants;
-    group.clearLayers();
-
-    if (usinas && layers.plants) {
-      const L = window.L;
-      usinas.features.forEach(f => {
-        if (!f.geometry) return;
-        const [lng, lat] = f.geometry.coordinates;
-        const props = f.properties;
-        
-        const operational = isOperational(props);
-        if (!showPlanned && !operational) return;
-
-        const category = getPlantCategory(props.TPUSINA_ID, props.NOME_TPUSINA);
-        if (!plantFilters[category]) return;
-
-        const color = getPlantColor(category);
-
-        let opacity = 0.8;
-        let isSelected = false;
-
-        if (pulseMode) {
-            if (selectedPlant) {
-                isSelected = (selectedPlant.lat === lat && selectedPlant.lng === lng);
-                opacity = isSelected ? 1 : 0.1;
-            } else {
-                // If no plant is selected yet in interactive modes, dim slightly
-                opacity = 0.8;
+        /* --- ANIMAÇÃO DE RESPIRAÇÃO (PULSO) --- */
+        @keyframes breathe {
+            0% {
+                stroke-opacity: 0.15;
+                stroke-width: 1px;
+                stroke: #5eead4; /* Teal-300 base */
+                filter: drop-shadow(0 0 0px rgba(94, 234, 212, 0));
+            }
+            50% {
+                stroke-opacity: 1;
+                stroke-width: 3.5px; /* Pico de brilho */
+                stroke: #ffffff;
+                filter: drop-shadow(0 0 8px rgba(94, 234, 212, 0.8));
+            }
+            100% {
+                stroke-opacity: 0.15;
+                stroke-width: 1px;
+                stroke: #5eead4;
+                filter: drop-shadow(0 0 0px rgba(94, 234, 212, 0));
             }
         }
 
-        const marker = L.circleMarker([lat, lng], {
-          radius: (pulseMode && isSelected) ? 8 : 4,
-          color: (pulseMode && isSelected) ? '#fff' : '#000',
-          weight: (pulseMode && isSelected) ? 2 : 1,
-          fillColor: color,
-          fillOpacity: opacity,
-          className: pulseMode ? 'cursor-pointer hover:stroke-white' : undefined 
-        });
-
-        marker.on('click', () => { 
-            if (pulseMode) {
-                handlePlantPulse(lat, lng); 
-            }
-        });
-        
-        if (!pulseMode) {
-          marker.bindPopup(createPopupContent(props.NOMELONGO, operational ? 'USINA GERADORA' : 'USINA (PLANEJADA)', { 'Tipo': props.NOME_TPUSINA, 'Código': props.INS_ID }));
-        } else {
-           marker.bindTooltip("Clique para propagar pulso", { direction: 'top' });
+        .pulse-line {
+            stroke-dasharray: none !important; /* Linha sólida para respiração */
+            stroke-linecap: round;
+            animation: breathe 5s ease-in-out infinite; /* Ciclo longo de 5s */
+            z-index: 1000;
+            vector-effect: non-scaling-stroke;
         }
-        group.addLayer(marker);
-      });
-    }
-  }, [usinas, layers.plants, leafletReady, pulseMode, plantFilters, showPlanned, selectedPlant]);
 
-  // Other layers (DC, Subs)
-  useEffect(() => {
-    if (!mapInstanceRef.current || !layerGroupsRef.current.dc) return;
-    const group = layerGroupsRef.current.dc;
-    group.clearLayers();
-    if (dc && layers.dc) {
-      const L = window.L;
-      dc.features.forEach(f => {
-        if (!showPlanned && !isOperational(f.properties)) return;
-        const coords = f.geometry.coordinates.map(c => [c[1], c[0]]);
-        const poly = L.polyline(coords, { color: grayMode ? '#525252' : '#db2777', weight: 2.5, dashArray: '5,5', opacity: pulseMode ? 0.05 : 1 });
-        poly.bindPopup(createPopupContent(f.properties.NOMELONGO, 'HVDC', { 'ID': f.properties.INS_ID }));
-        group.addLayer(poly);
-      });
-    }
-  }, [dc, layers.dc, leafletReady, pulseMode, showPlanned, grayMode]);
+        /* Estilo para linhas planejadas (tracejadas) */
+        .planned-line {
+            stroke-dasharray: 4, 8;
+            opacity: 0.4;
+        }
 
-  useEffect(() => {
-    if (!mapInstanceRef.current || !layerGroupsRef.current.subs) return;
-    const group = layerGroupsRef.current.subs;
-    group.clearLayers();
-    if (subestacoes && layers.subs) {
-      const L = window.L;
-      subestacoes.features.forEach(f => {
-        if (!showPlanned && !isOperational(f.properties)) return;
-        const [lng, lat] = f.geometry.coordinates;
-        // Substations white by default, dim in pulse mode
-        const m = L.circleMarker([lat, lng], { radius: 2, color: '#fff', fillColor: '#fff', weight: 0, fillOpacity: pulseMode ? 0.05 : 0.8 });
-        m.bindPopup(createPopupContent(f.properties.NOMELONGO, 'SUBESTAÇÃO', { 'ID': f.properties.INS_ID }));
-        group.addLayer(m);
-      });
-    }
-  }, [subestacoes, layers.subs, leafletReady, pulseMode, showPlanned]);
+        /* Classes de Delay (geradas dinamicamente no JS, mas fallback aqui) */
+        .delay-0 { animation-delay: 0s; }
+        .delay-1 { animation-delay: 0.15s; }
+        /* ... JS irá injetar mais */
+    </style>
+</head>
+<body>
+    <div id="root"></div>
 
-  const stats = useMemo(() => {
-    let kmTotal = 0, usinasTotal = 0, cleanCount = 0;
-    
-    if (transmissao?.features) {
-      kmTotal += transmissao.features.reduce((acc, f) => acc + (f.properties['SHAPE.STLength()'] || 0.5), 0);
-    }
-    if (usinas?.features) {
-      const filtered = usinas.features.filter(f => showPlanned || isOperational(f.properties));
-      usinasTotal = filtered.length;
-      cleanCount = filtered.filter(f => {
-        const type = (f.properties.TPUSINA_ID || '').toUpperCase();
-        const name = (f.properties.NOME_TPUSINA || '').toUpperCase();
-        const category = getPlantCategory(type, name);
-        return ['Hidrelétrica', 'Eólica', 'Solar', 'Outros'].includes(category);
-      }).length;
-    }
-    
-    const cleanPercentage = usinasTotal > 0 ? Math.round((cleanCount / usinasTotal) * 100) : 0;
-    
-    return { estimatedKm: Math.round(kmTotal * 111), usinasTotal, cleanPercentage };
-  }, [transmissao, usinas, showPlanned]);
+    <!-- Scripts: React, ReactDOM, Babel, Leaflet -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
-  const toggleLayer = (k) => setLayers(p => ({ ...p, [k]: !p[k] }));
-  const togglePlantFilter = (k) => setPlantFilters(p => ({ ...p, [k]: !p[k] }));
-  const toggleVoltageFilter = (k) => setVoltageFilters(p => ({ ...p, [k]: !p[k] }));
+    <!-- Componente React Principal -->
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo } = React;
 
-  return (
-    <div className="flex h-screen w-full bg-neutral-950 text-white overflow-hidden relative">
-      <style>{styles}</style>
+        // --- ICONES SVG (Substituindo Lucide-React para funcionar sem build) ---
+        const Icon = ({ name, size = 18, className = "" }) => {
+            const icons = {
+                activity: <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>,
+                zap: <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>,
+                radio: <><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1"/></>,
+                flame: <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.1.2-2.2.6-3.3.7-1.9 2-3.32 2-3.32.2 1.12.5 2.12.9 3.12z"/>,
+                battery: <><rect width="16" height="10" x="2" y="7" rx="2" ry="2"/><line x1="22" x2="22" y1="11" y2="13"/></>,
+                menu: <><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></>,
+                x: <><path d="M18 6 6 18"/><path d="m6 6 12 12"/></>,
+                layers: <><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></>,
+                waves: <><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></>,
+                leaf: <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 13-11 13 4.5-5.5 9-9.5 9-14"/>,
+                filter: <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>,
+                construction: <><rect x="2" y="6" width="20" height="8" rx="1"/><path d="M17 14v7"/><path d="M7 14v7"/><path d="M17 3v3"/><path d="M7 3v3"/><path d="M10 14 2.3 6.3"/><path d="m14 6 7.7 7.7"/><path d="m8 6 8 8"/></>,
+                palette: <><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></>,
+                eraser: <><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></>,
+                download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></>
+            };
 
-      {/* Sidebar */}
-      <div className={`absolute z-[1000] top-0 left-0 h-full bg-neutral-900/95 backdrop-blur-md border-r border-neutral-800 transition-all duration-300 ease-in-out flex flex-col ${sidebarOpen ? 'w-80 translate-x-0' : 'w-80 -translate-x-full'}`}>
-        <div className="p-5 border-b border-neutral-800 flex justify-between items-center bg-neutral-900">
-          <div>
-            <h1 className="font-bold text-lg tracking-tight flex items-center gap-2">
-              <Activity className="text-emerald-500" size={20} />
-              SIN Interativo
-            </h1>
-            <p className="text-xs text-neutral-500 font-mono mt-1">Sistema Interligado Nacional</p>
-          </div>
-          <button onClick={() => setSidebarOpen(false)} className="p-1 hover:bg-neutral-800 rounded text-neutral-400"><X size={20} /></button>
-        </div>
+            return (
+                <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width={size} 
+                    height={size} 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    className={className}
+                >
+                    {icons[name] || <circle cx="12" cy="12" r="10" />}
+                </svg>
+            );
+        };
 
-        {/* --- MODES PANEL --- */}
-        <div className="p-4 border-b border-neutral-800 bg-neutral-800/30 space-y-3">
-          {/* Pulse Mode */}
-          <button onClick={() => { setPulseMode(!pulseMode); clearPulse(); }}
-            className={`w-full py-2.5 px-3 rounded-md flex items-center justify-between font-medium transition-all text-sm border ${pulseMode ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:bg-neutral-700'}`}>
-            <span className="flex items-center gap-2"><Waves size={16} /> Modo Pulso</span>
-            {pulseMode && <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>}
-          </button>
-          
-          {pulseMode && selectedPlant && (
-             <button onClick={clearPulse} className="w-full py-2 px-3 text-xs bg-red-900/30 text-red-300 border border-red-800/50 rounded hover:bg-red-900/50 flex items-center justify-center gap-2">
-                <Eraser size={12}/> Desselecionar Usina
-             </button>
-          )}
-          
-          <p className="text-[10px] text-neutral-500 text-center px-1">
-            {pulseMode ? (selectedPlant ? 'Visualizando propagação.' : 'Clique em uma usina para iniciar.') : 'Explore os modos interativos.'}
-          </p>
-        </div>
+        // --- UTILITÁRIOS ---
 
-        {/* Clean Energy Grid Icon */}
-        <div className="mx-5 mt-4 p-4 bg-gradient-to-br from-emerald-900/40 to-neutral-900 border border-emerald-800/50 rounded-xl flex items-center justify-between shadow-lg">
-          <div>
-            <p className="text-[10px] text-emerald-400 uppercase font-bold tracking-widest mb-1">Matriz Renovável</p>
-            <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-bold text-white">{stats.cleanPercentage}%</span>
-              <span className="text-xs text-neutral-400">do grid</span>
+        const getVoltageCategory = (voltage) => {
+            const v = Number(voltage);
+            if (v >= 750) return '750+';
+            if (v >= 600) return '600';
+            if (v >= 500) return '500';
+            if (v >= 440) return '440';
+            if (v >= 345) return '345';
+            if (v >= 230) return '230';
+            return '138-';
+        };
+
+        const getVoltageColor = (voltage, grayMode = false) => {
+            if (grayMode) return '#2dd4bf'; // Verde água (Teal-400)
+            
+            const v = Number(voltage);
+            if (v >= 750) return '#7c3aed';
+            if (v >= 600) return '#db2777';
+            if (v >= 500) return '#ef4444';
+            if (v >= 440) return '#f59e0b';
+            if (v >= 345) return '#eab308';
+            if (v >= 230) return '#22c55e';
+            if (v >= 138) return '#3b82f6';
+            return '#64748b';
+        };
+
+        const getPlantCategory = (typeId, typeName) => {
+            const t = (typeId || '').toUpperCase();
+            const n = (typeName || '').toUpperCase();
+            if (t === 'UHE' || n.includes('HIDRO')) return 'Hidrelétrica';
+            if (t === 'UTE' || n.includes('TERMICA')) return 'Térmica';
+            if (t === 'EOL' || n.includes('EOLICA') || n.includes('EOLIELETRICA')) return 'Eólica';
+            if (t === 'UFV' || n.includes('SOLAR')) return 'Solar';
+            if (t === 'UCN' || n.includes('NUCLEAR')) return 'Nuclear';
+            return 'Outros';
+        };
+
+        const getPlantColor = (category) => {
+            switch (category) {
+                case 'Hidrelétrica': return '#3b82f6';
+                case 'Térmica': return '#f97316';
+                case 'Eólica': return '#22d3ee';
+                case 'Solar': return '#fbbf24';
+                case 'Nuclear': return '#a855f7';
+                case 'Outros': return '#10b981'; 
+                default: return '#9ca3af';
+            }
+        };
+
+        const getDistance = (lat1, lng1, lat2, lng2) => {
+            return Math.sqrt(Math.pow(lat2 - lat1, 2) + Math.pow(lng2 - lng1, 2));
+        };
+
+        const isOperational = (props) => {
+            if (props.DTENTRADA) {
+                const entryDate = new Date(props.DTENTRADA);
+                if (entryDate > new Date()) return false;
+            } else if (props.DTPREVISTA) {
+                return false;
+            }
+            return true; 
+        };
+
+        // --- COMPONENTES DA UI ---
+
+        const FileUploader = ({ label, accept, onFileLoaded, loaded, iconName, loading }) => {
+            const handleFileChange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const json = JSON.parse(event.target.result);
+                        onFileLoaded(json);
+                    } catch (err) {
+                        alert("Erro ao ler JSON: " + err.message);
+                    }
+                };
+                reader.readAsText(file);
+            };
+
+            return (
+                <div className={`flex items-center justify-between p-3 mb-2 rounded-lg border transition-all duration-200 ${loaded ? 'bg-emerald-900/20 border-emerald-500/50' : 'bg-neutral-800 border-neutral-700 hover:border-neutral-500'}`}>
+                    <div className="flex items-center gap-3 overflow-hidden">
+                        <div className={`p-2 rounded-md ${loaded ? 'bg-emerald-500/20 text-emerald-400' : 'bg-neutral-700 text-neutral-400'}`}>
+                            <Icon name={iconName} size={18} />
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                            <span className="text-sm font-medium text-neutral-200 truncate pr-2">{label}</span>
+                            <span className="text-xs text-neutral-500 font-mono flex items-center gap-1">
+                                {loading ? (
+                                    <span className="animate-pulse text-amber-400">Buscando...</span>
+                                ) : (
+                                    loaded ? 'Carregado' : 'Aguardando arquivo...'
+                                )}
+                            </span>
+                        </div>
+                    </div>
+                    <label className="cursor-pointer px-3 py-1.5 text-xs font-medium bg-neutral-700 hover:bg-neutral-600 text-white rounded-md transition-colors whitespace-nowrap">
+                        {loaded ? 'Trocar' : 'Carregar'}
+                        <input type="file" accept={accept} onChange={handleFileChange} className="hidden" />
+                    </label>
+                </div>
+            );
+        };
+
+        const LegendItem = ({ color, label }) => (
+            <div className="flex items-center gap-3 py-1">
+                <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: color }}></div>
+                <span className="text-xs text-neutral-300 font-medium">{label}</span>
             </div>
-          </div>
-          <div className="p-2 bg-emerald-500/20 rounded-lg text-emerald-400">
-             <Leaf size={24} />
-          </div>
-        </div>
+        );
 
-        {/* Tabs */}
-        <div className="flex border-b border-neutral-800 mt-2">
-          <button onClick={() => setActiveTab('files')} className={`flex-1 py-3 text-xs font-medium uppercase tracking-wider ${activeTab === 'files' ? 'text-emerald-400 border-b-2 border-emerald-500' : 'text-neutral-500'}`}>Dados</button>
-          <button onClick={() => setActiveTab('filters')} className={`flex-1 py-3 text-xs font-medium uppercase tracking-wider ${activeTab === 'filters' ? 'text-emerald-400 border-b-2 border-emerald-500' : 'text-neutral-500'}`}>Filtros</button>
-          <button onClick={() => setActiveTab('legend')} className={`flex-1 py-3 text-xs font-medium uppercase tracking-wider ${activeTab === 'legend' ? 'text-emerald-400 border-b-2 border-emerald-500' : 'text-neutral-500'}`}>Legenda</button>
-        </div>
+        // --- APP PRINCIPAL ---
 
-        {/* Tab Content */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-6">
-          {activeTab === 'files' && (
-            <div className="animate-in fade-in slide-in-from-left-4 duration-300">
-               <div className="mb-4 text-xs text-neutral-400 bg-neutral-900/50 p-3 rounded border border-neutral-800">
-                 <p className="flex items-center gap-2"><DownloadCloud size={14}/> Carregamento automático ativado</p>
-                 <p className="mt-1 opacity-60">O sistema busca os arquivos .geojson automaticamente na raiz.</p>
-               </div>
+        function App() {
+            // Estados de Dados
+            const [transmissao, setTransmissao] = useState(null);
+            const [dc, setDc] = useState(null);
+            const [subestacoes, setSubestacoes] = useState(null);
+            const [usinas, setUsinas] = useState(null);
+            
+            // Estados de Carregamento
+            const [loadingStates, setLoadingStates] = useState({
+                transmissao: false, dc: false, subestacoes: false, usinas: false
+            });
+            
+            // Estados de UI
+            const [sidebarOpen, setSidebarOpen] = useState(true);
+            const [activeTab, setActiveTab] = useState('files');
+            const [leafletReady, setLeafletReady] = useState(false);
+            
+            // Estados de Modo Interativo
+            const [pulseMode, setPulseMode] = useState(false);
+            const [pulsingLines, setPulsingLines] = useState(new Map()); 
+            const [selectedPlant, setSelectedPlant] = useState(null); 
 
-               <FileUploader label="Transmissão (AC)" accept=".geojson,.json" icon={Zap} loaded={!!transmissao} loading={loadingStates.transmissao} onFileLoaded={setTransmissao} />
-               <FileUploader label="Usinas Geradoras" accept=".geojson,.json" icon={Flame} loaded={!!usinas} loading={loadingStates.usinas} onFileLoaded={setUsinas} />
-               <FileUploader label="Corrente Contínua" accept=".geojson,.json" icon={Battery} loaded={!!dc} loading={loadingStates.dc} onFileLoaded={setDc} />
-               <FileUploader label="Subestações" accept=".geojson,.json" icon={Radio} loaded={!!subestacoes} loading={loadingStates.subestacoes} onFileLoaded={setSubestacoes} />
-            </div>
-          )}
+            // Filtros
+            const [showPlanned, setShowPlanned] = useState(false); 
+            const [grayMode, setGrayMode] = useState(false);
+            const [layers, setLayers] = useState({ ac: true, dc: true, subs: true, plants: true });
+            
+            const [voltageFilters, setVoltageFilters] = useState({
+                '750+': true, '600': true, '500': true, '440': true, '345': true, '230': true, '138-': true
+            });
 
-          {activeTab === 'filters' && (
-             <div className="space-y-6 animate-in fade-in slide-in-from-left-4">
-               <div>
-                  <h3 className="text-xs font-bold text-neutral-500 uppercase mb-3 flex items-center gap-2"><Construction size={14}/> Planejamento</h3>
-                  <button 
-                    onClick={() => setShowPlanned(!showPlanned)} 
-                    className={`w-full flex justify-between items-center text-xs p-2 rounded border transition-colors ${showPlanned ? 'bg-amber-900/30 border-amber-600 text-amber-500' : 'border-neutral-800 text-neutral-600'}`}
-                  >
-                    <span>Mostrar Expansões Futuras</span>
-                    {showPlanned && <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>}
-                  </button>
-               </div>
+            const [plantFilters, setPlantFilters] = useState({
+                'Hidrelétrica': true, 'Térmica': true, 'Eólica': true, 'Solar': true, 'Nuclear': true, 'Outros': true
+            });
 
-               <div>
-                  <h3 className="text-xs font-bold text-neutral-500 uppercase mb-3 flex items-center gap-2"><Layers size={14}/> Camadas Principais</h3>
-                  <div className="space-y-2">
-                    <button onClick={() => toggleLayer('ac')} className={`w-full flex justify-between items-center text-xs p-2 rounded border transition-colors ${layers.ac ? 'bg-neutral-800 border-neutral-600 text-white' : 'border-neutral-800 text-neutral-600'}`}>
-                      <span>Linhas de Transmissão</span> <div className={`w-2 h-2 rounded-full ${layers.ac ? 'bg-emerald-500' : 'bg-neutral-700'}`}></div>
-                    </button>
-                    <button onClick={() => toggleLayer('plants')} className={`w-full flex justify-between items-center text-xs p-2 rounded border transition-colors ${layers.plants ? 'bg-neutral-800 border-neutral-600 text-white' : 'border-neutral-800 text-neutral-600'}`}>
-                      <span>Usinas Geradoras</span> <div className={`w-2 h-2 rounded-full ${layers.plants ? 'bg-orange-500' : 'bg-neutral-700'}`}></div>
-                    </button>
-                    <button onClick={() => toggleLayer('subs')} className={`w-full flex justify-between items-center text-xs p-2 rounded border transition-colors ${layers.subs ? 'bg-neutral-800 border-neutral-600 text-white' : 'border-neutral-800 text-neutral-600'}`}>
-                      <span>Subestações</span> <div className={`w-2 h-2 rounded-full ${layers.subs ? 'bg-white' : 'bg-neutral-700'}`}></div>
-                    </button>
-                  </div>
-               </div>
+            const mapContainerRef = useRef(null);
+            const mapInstanceRef = useRef(null);
+            const layerGroupsRef = useRef({ ac: null, dc: null, subs: null, plants: null });
 
-               <div>
-                  <h3 className="text-xs font-bold text-neutral-500 uppercase mb-3 flex items-center gap-2"><Filter size={14}/> Filtrar Tensão (kV)</h3>
-                  <div className="mb-3">
-                    <button onClick={() => setGrayMode(!grayMode)} className={`w-full flex justify-between items-center text-xs p-2 rounded border transition-colors ${grayMode ? 'bg-teal-900/30 border-teal-600 text-teal-400' : 'border-neutral-800 text-neutral-600'}`}>
-                      <div className="flex items-center gap-2"><Palette size={12}/> <span>Modo Monocromático</span></div>
-                      <div className={`w-2 h-2 rounded-full ${grayMode ? 'bg-teal-400' : 'bg-neutral-800'}`}></div>
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {Object.keys(voltageFilters).map(key => (
-                       <button key={key} onClick={() => toggleVoltageFilter(key)} 
-                         className={`text-[10px] p-2 rounded border transition-colors text-left flex items-center gap-2
-                         ${voltageFilters[key] ? 'bg-neutral-800 border-neutral-600 text-neutral-200' : 'border-neutral-800 text-neutral-600'}`}>
-                         <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: voltageFilters[key] ? getVoltageColor(key.replace('+','').replace('-','').split(' ')[0], grayMode) : '#525252' }}></div>
-                         {key}
-                       </button>
-                    ))}
-                  </div>
-               </div>
+            // Injeção dinâmica de CSS Delay
+            useEffect(() => {
+                const style = document.createElement('style');
+                style.innerHTML = Array.from({ length: 40 }).map((_, i) => `
+                    .delay-${i} { animation-delay: ${i * 0.15}s !important; }
+                `).join('');
+                document.head.appendChild(style);
+            }, []);
 
-               <div>
-                  <h3 className="text-xs font-bold text-neutral-500 uppercase mb-3 flex items-center gap-2"><Filter size={14}/> Tipos de Usina</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    {Object.keys(plantFilters).map(key => (
-                       <button key={key} onClick={() => togglePlantFilter(key)} 
-                         className={`text-[10px] p-2 rounded border transition-colors text-left flex items-center gap-2
-                         ${plantFilters[key] ? 'bg-neutral-800 border-neutral-600 text-neutral-200' : 'border-neutral-800 text-neutral-600'}`}>
-                         <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: plantFilters[key] ? getPlantColor(key) : '#525252' }}></div>
-                         {key}
-                       </button>
-                    ))}
-                  </div>
-               </div>
-             </div>
-          )}
+            // Check Leaflet
+            useEffect(() => {
+                if (window.L) setLeafletReady(true);
+            }, []);
 
-          {activeTab === 'legend' && (
-             <div className="space-y-4">
-               <div><h3 className="text-xs font-bold text-neutral-500 uppercase mb-2">Tensão</h3>
-               {[750, 600, 500, 440, 230, 138].map(v => (
-                 <LegendItem key={v} color={getVoltageColor(v, grayMode)} label={`${v} kV`} />
-               ))}</div>
-               <div><h3 className="text-xs font-bold text-neutral-500 uppercase mb-2">Fonte</h3>
-               <LegendItem color="#3b82f6" label="Hidrelétrica" /><LegendItem color="#fbbf24" label="Solar" /><LegendItem color="#22d3ee" label="Eólica" /><LegendItem color="#10b981" label="Outras" /></div>
-               {showPlanned && (
-                 <div><h3 className="text-xs font-bold text-neutral-500 uppercase mb-2">Status</h3>
-                 <div className="flex items-center gap-3 py-1">
-                    <div className="w-8 h-0 border-t-2 border-dashed border-gray-500"></div>
-                    <span className="text-xs text-neutral-300">Planejado / Em Obra</span>
-                 </div>
-                 </div>
-               )}
-             </div>
-          )}
-        </div>
-      </div>
+            // Auto-fetch Data
+            useEffect(() => {
+                const fetchGeoJSON = async (filename, setter, key) => {
+                    setLoadingStates(prev => ({ ...prev, [key]: true }));
+                    try {
+                        const response = await fetch(filename);
+                        if (response.ok) {
+                            const data = await response.json();
+                            setter(data);
+                        }
+                    } catch (error) {
+                        console.warn(`Carregamento automático falhou para ${filename}. Use upload manual.`);
+                    } finally {
+                        setLoadingStates(prev => ({ ...prev, [key]: false }));
+                    }
+                };
 
-      {!sidebarOpen && (
-        <div className="absolute top-5 left-5 z-[1000] flex flex-col gap-3">
-           <button onClick={() => setSidebarOpen(true)} className="p-3 bg-neutral-900 border border-neutral-700 text-white rounded-lg shadow-xl hover:bg-neutral-800"><Menu size={20} /></button>
-           <button onClick={() => { setPulseMode(!pulseMode); clearPulse(); }} className={`p-3 border rounded-lg shadow-xl ${pulseMode ? 'bg-indigo-600 border-indigo-500 animate-pulse' : 'bg-neutral-900 border-neutral-700'}`} title="Pulso"><Waves size={20} /></button>
-        </div>
-      )}
+                fetchGeoJSON('transmissao.geojson', setTransmissao, 'transmissao');
+                fetchGeoJSON('correntecontinua.geojson', setDc, 'dc');
+                fetchGeoJSON('subestacoes.geojson', setSubestacoes, 'subestacoes');
+                fetchGeoJSON('usinas.geojson', setUsinas, 'usinas');
+            }, []);
 
-      {/* Map */}
-      <div id="map" ref={mapContainerRef} className={`flex-1 h-full w-full bg-neutral-900 transition-opacity duration-500 ${leafletReady ? 'opacity-100' : 'opacity-0'}`} />
-      
-      {!leafletReady && <div className="absolute inset-0 z-[2000] flex items-center justify-center bg-neutral-900 text-emerald-500"><Activity className="animate-pulse" size={40} /></div>}
-      <div className="absolute bottom-1 right-1 bg-black/50 px-2 py-1 text-[10px] text-gray-500 pointer-events-none z-[400]">ONS | Geist UI</div>
-    </div>
-  );
-}
+            // Inicializar Mapa
+            useEffect(() => {
+                if (!leafletReady || !mapContainerRef.current) return;
+                if (mapInstanceRef.current) { mapInstanceRef.current.remove(); mapInstanceRef.current = null; }
+
+                try {
+                    const map = L.map(mapContainerRef.current, { 
+                        zoomControl: false, 
+                        attributionControl: false,
+                        preferCanvas: false
+                    }).setView([-15.793889, -47.882778], 4);
+                    
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                        attribution: '&copy; OpenStreetMap, &copy; CARTO',
+                        subdomains: 'abcd',
+                        maxZoom: 18
+                    }).addTo(map);
+
+                    const svgRenderer = L.svg({ padding: 0.5 });
+
+                    layerGroupsRef.current.ac = L.layerGroup({ renderer: svgRenderer }).addTo(map);
+                    layerGroupsRef.current.dc = L.layerGroup({ renderer: svgRenderer }).addTo(map);
+                    layerGroupsRef.current.subs = L.layerGroup({ renderer: svgRenderer }).addTo(map);
+                    layerGroupsRef.current.plants = L.layerGroup({ renderer: svgRenderer }).addTo(map);
+
+                    mapInstanceRef.current = map;
+                } catch (e) { console.error(e); }
+
+                return () => { if (mapInstanceRef.current) { mapInstanceRef.current.remove(); mapInstanceRef.current = null; } };
+            }, [leafletReady]);
+
+            // Lógica de Pulso (BFS)
+            const handlePlantPulse = (plantLat, plantLng) => {
+                if (!transmissao || !pulseMode) return;
+                
+                setSelectedPlant({ lat: plantLat, lng: plantLng });
+
+                const QUEUE_LIMIT = 1000; 
+                const MAX_DEPTH = 30;
+                const THRESHOLD = 0.3;
+
+                const visitedLines = new Map(); 
+                const queue = [{ lat: plantLat, lng: plantLng, depth: 0 }];
+                let iterations = 0;
+
+                while (queue.length > 0 && iterations < QUEUE_LIMIT) {
+                    const current = queue.shift();
+                    if (current.depth >= MAX_DEPTH) continue;
+
+                    transmissao.features.forEach((feature, idx) => {
+                        if (visitedLines.has(idx)) return;
+                        if (!showPlanned && !isOperational(feature.properties)) return; 
+                        
+                        const vCat = getVoltageCategory(feature.properties.VN);
+                        if (!voltageFilters[vCat]) return;
+
+                        if (!feature.geometry || !feature.geometry.coordinates) return;
+
+                        const coords = feature.geometry.coordinates;
+                        const start = coords[0]; 
+                        const end = coords[coords.length - 1];
+
+                        const distStart = getDistance(current.lat, current.lng, start[1], start[0]);
+                        const distEnd = getDistance(current.lat, current.lng, end[1], end[0]);
+
+                        if (distStart < THRESHOLD) {
+                            visitedLines.set(idx, { reversed: false, depth: current.depth }); 
+                            queue.push({ lat: end[1], lng: end[0], depth: current.depth + 1 });
+                        } else if (distEnd < THRESHOLD) {
+                            visitedLines.set(idx, { reversed: true, depth: current.depth }); 
+                            queue.push({ lat: start[1], lng: start[0], depth: current.depth + 1 });
+                        }
+                    });
+                    iterations++;
+                }
+                setPulsingLines(visitedLines);
+            };
+
+            const clearPulse = () => {
+                setPulsingLines(new Map());
+                setSelectedPlant(null);
+            };
+
+            const createPopup = (title, type, details) => {
+                const detailsHtml = Object.entries(details)
+                    .filter(([_, val]) => val)
+                    .map(([key, val]) => `
+                        <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; border-bottom: 1px solid #333;">
+                            <span style="color: #9ca3af; font-family: monospace;">${key}:</span>
+                            <span style="color: #f3f4f6; font-weight: 500; margin-left: 8px; text-align: right;">${val}</span>
+                        </div>
+                    `).join('');
+                return `<div style="font-family: 'Geist', sans-serif; min-width: 220px;">
+                    <h3 style="font-weight: 700; font-size: 13px; margin: 0 0 10px 0; padding-bottom: 6px; border-bottom: 2px solid #525252; color: #fff;">${title || 'Sem Nome'}</h3>
+                    <div>${detailsHtml}</div>
+                    <div style="margin-top: 10px; font-size: 9px; color: #22d3ee; text-transform: uppercase; text-align: right; font-weight: bold;">${type}</div>
+                </div>`;
+            };
+
+            // Render Layers
+            useEffect(() => {
+                if (!mapInstanceRef.current) return;
+
+                // AC Transmission
+                const acGroup = layerGroupsRef.current.ac;
+                acGroup.clearLayers();
+                if (transmissao && layers.ac) {
+                    transmissao.features.forEach((f, idx) => {
+                        const props = f.properties;
+                        const operational = isOperational(props);
+                        if (!showPlanned && !operational) return;
+                        if (!voltageFilters[getVoltageCategory(props.VN)]) return;
+
+                        let coords = f.geometry.coordinates.map(c => [c[1], c[0]]);
+                        const pulseData = pulsingLines.get(idx);
+                        const isPulsing = !!pulseData;
+                        
+                        if (pulseMode && isPulsing && pulseData.reversed) coords = coords.reverse();
+
+                        let opacity = 0.8;
+                        if (pulseMode) opacity = isPulsing ? 1.0 : 0.05;
+
+                        const classList = [];
+                        if (isPulsing) {
+                            classList.push('pulse-line');
+                            classList.push(`delay-${Math.min(pulseData.depth, 39)}`);
+                        }
+                        if (!operational) classList.push('planned-line');
+
+                        const polyline = L.polyline(coords, {
+                            color: getVoltageColor(props.VN, grayMode),
+                            weight: isPulsing ? 2.5 : 1.5,
+                            opacity: opacity,
+                            className: classList.join(' ') || undefined,
+                            dashArray: operational ? null : '5, 10'
+                        });
+
+                        if (!pulseMode) polyline.bindPopup(createPopup(props.NOMELONGO, 'TRANSMISSÃO AC', {'Tensão': props.VN + ' kV', 'Agente': props.AGE_NOME}));
+                        acGroup.addLayer(polyline);
+                    });
+                }
+
+                // Plants
+                const plantsGroup = layerGroupsRef.current.plants;
+                plantsGroup.clearLayers();
+                if (usinas && layers.plants) {
+                    usinas.features.forEach(f => {
+                        const props = f.properties;
+                        const operational = isOperational(props);
+                        if (!showPlanned && !operational) return;
+                        
+                        const cat = getPlantCategory(props.TPUSINA_ID, props.NOME_TPUSINA);
+                        if (!plantFilters[cat]) return;
+
+                        const [lng, lat] = f.geometry.coordinates;
+                        let opacity = 0.9;
+                        let isSelected = false;
+
+                        if (pulseMode) {
+                            if (selectedPlant) {
+                                isSelected = (selectedPlant.lat === lat && selectedPlant.lng === lng);
+                                opacity = isSelected ? 1 : 0.1;
+                            } else opacity = 0.8;
+                        }
+
+                        const marker = L.circleMarker([lat, lng], {
+                            radius: (pulseMode && isSelected) ? 8 : 3,
+                            color: (pulseMode && isSelected) ? '#fff' : '#000',
+                            weight: (pulseMode && isSelected) ? 2 : 1,
+                            fillColor: getPlantColor(cat),
+                            fillOpacity: opacity,
+                            opacity: opacity,
+                            className: pulseMode ? 'cursor-pointer hover:stroke-white' : ''
+                        });
+
+                        marker.on('click', () => { if (pulseMode) handlePlantPulse(lat, lng); });
+                        if (!pulseMode) marker.bindPopup(createPopup(props.NOMELONGO, 'USINA', {'Tipo': props.NOME_TPUSINA, 'Capacidade': props.VAL_POTENCIA + ' MW'}));
+                        plantsGroup.addLayer(marker);
+                    });
+                }
+
+                // DC & Subs
+                const dcGroup = layerGroupsRef.current.dc;
+                dcGroup.clearLayers();
+                if (dc && layers.dc) {
+                    dc.features.forEach(f => {
+                        if (!showPlanned && !isOperational(f.properties)) return;
+                        const coords = f.geometry.coordinates.map(c => [c[1], c[0]]);
+                        const poly = L.polyline(coords, {
+                            color: grayMode ? '#525252' : '#db2777',
+                            weight: 3, dashArray: '5,5', opacity: pulseMode ? 0.05 : 1
+                        });
+                        if (!pulseMode) poly.bindPopup(createPopup(f.properties.NOMELONGO, 'HVDC', {}));
+                        dcGroup.addLayer(poly);
+                    });
+                }
+
+                const subGroup = layerGroupsRef.current.subs;
+                subGroup.clearLayers();
+                if (subestacoes && layers.subs) {
+                    subestacoes.features.forEach(f => {
+                        if (!showPlanned && !isOperational(f.properties)) return;
+                        const [lng, lat] = f.geometry.coordinates;
+                        const m = L.circleMarker([lat, lng], {
+                            radius: 1.5, color: '#fff', fillColor: '#fff', weight: 0,
+                            fillOpacity: pulseMode ? 0.05 : 0.8
+                        });
+                        if (!pulseMode) m.bindPopup(createPopup(f.properties.NOMELONGO, 'SUBESTAÇÃO', {}));
+                        subGroup.addLayer(m);
+                    });
+                }
+
+            }, [transmissao, usinas, dc, subestacoes, layers, pulseMode, showPlanned, grayMode, voltageFilters, plantFilters, pulsingLines, selectedPlant]);
+
+            // Stats
+            const stats = useMemo(() => {
+                let kmTotal = 0, usinasTotal = 0, cleanCount = 0;
+                if (transmissao?.features) {
+                    kmTotal += transmissao.features.reduce((acc, f) => acc + (f.properties['SHAPE.STLength()'] || 0.5), 0);
+                }
+                if (usinas?.features) {
+                    const filtered = usinas.features.filter(f => showPlanned || isOperational(f.properties));
+                    usinasTotal = filtered.length;
+                    cleanCount = filtered.filter(f => {
+                        const cat = getPlantCategory(f.properties.TPUSINA_ID, f.properties.NOME_TPUSINA);
+                        return ['Hidrelétrica', 'Eólica', 'Solar', 'Outros'].includes(cat);
+                    }).length;
+                }
+                return { 
+                    estimatedKm: Math.round(kmTotal * 111), 
+                    usinasTotal, 
+                    cleanPercentage: usinasTotal > 0 ? Math.round((cleanCount / usinasTotal) * 100) : 0 
+                };
+            }, [transmissao, usinas, showPlanned]);
+
+            // Toggles
+            const toggleLayer = (k) => setLayers(p => ({ ...p, [k]: !p[k] }));
+            const togglePlantFilter = (k) => setPlantFilters(p => ({ ...p, [k]: !p[k] }));
+            const toggleVoltageFilter = (k) => setVoltageFilters(p => ({ ...p, [k]: !p[k] }));
+
+            return (
+                <div className="flex h-screen w-full">
+                    {/* Sidebar */}
+                    <div className={`absolute z-[1000] top-0 left-0 h-full bg-neutral-900/95 backdrop-blur-md border-r border-neutral-800 transition-all duration-300 ease-in-out flex flex-col ${sidebarOpen ? 'w-80 translate-x-0' : 'w-80 -translate-x-full'}`}>
+                        {/* Header */}
+                        <div className="p-5 border-b border-neutral-800 flex justify-between items-center bg-neutral-900">
+                            <div>
+                                <h1 className="font-bold text-lg tracking-tight flex items-center gap-2 text-white">
+                                    <Icon name="activity" className="text-emerald-500" /> SIN Interativo
+                                </h1>
+                                <p className="text-xs text-neutral-500 font-mono mt-1">Sistema Interligado Nacional</p>
+                            </div>
+                            <button onClick={() => setSidebarOpen(false)} className="p-1 hover:bg-neutral-800 rounded text-neutral-400"><Icon name="x" /></button>
+                        </div>
+
+                        {/* Painel Modo Pulso */}
+                        <div className="p-4 border-b border-neutral-800 bg-neutral-800/30 space-y-3">
+                            <button onClick={() => { setPulseMode(!pulseMode); clearPulse(); }}
+                                className={`w-full py-3 px-4 rounded-lg flex items-center justify-between font-medium transition-all text-sm border shadow-lg ${pulseMode ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:bg-neutral-700'}`}>
+                                <span className="flex items-center gap-2"><Icon name="waves" /> Modo Pulso</span>
+                                {pulseMode && <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>}
+                            </button>
+                            
+                            {pulseMode && selectedPlant && (
+                                <button onClick={clearPulse} className="w-full py-2 px-3 text-xs bg-red-900/20 text-red-400 border border-red-900/50 rounded hover:bg-red-900/40 flex items-center justify-center gap-2 transition-colors">
+                                    <Icon name="eraser" size={14}/> Desselecionar Usina
+                                </button>
+                            )}
+                            <p className="text-[10px] text-neutral-500 text-center px-1">
+                                {pulseMode ? (selectedPlant ? 'Propagação ativa.' : 'Clique em uma usina para iniciar.') : 'Ative para visualizar o fluxo.'}
+                            </p>
+                        </div>
+
+                        {/* Widget Renovável */}
+                        <div className="mx-5 mt-4 p-4 bg-gradient-to-br from-emerald-900/40 to-neutral-900 border border-emerald-800/50 rounded-xl flex items-center justify-between shadow-lg">
+                            <div>
+                                <p className="text-[10px] text-emerald-400 uppercase font-bold tracking-widest mb-1">Renovável</p>
+                                <div className="flex items-baseline gap-1">
+                                    <span className="text-2xl font-bold text-white">{stats.cleanPercentage}%</span>
+                                    <span className="text-xs text-neutral-400">do grid</span>
+                                </div>
+                            </div>
+                            <div className="p-2 bg-emerald-500/20 rounded-lg text-emerald-400"><Icon name="leaf" size={24}/></div>
+                        </div>
+
+                        {/* Tabs */}
+                        <div className="flex border-b border-neutral-800 mt-2">
+                            {['files', 'filters', 'legend'].map(tab => (
+                                <button key={tab} onClick={() => setActiveTab(tab)} 
+                                    className={`flex-1 py-3 text-xs font-medium uppercase tracking-wider ${activeTab === tab ? 'text-emerald-400 border-b-2 border-emerald-500' : 'text-neutral-500 hover:text-neutral-300'}`}>
+                                    {tab === 'files' ? 'Dados' : tab === 'filters' ? 'Filtros' : 'Legenda'}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 overflow-y-auto p-5 space-y-6">
+                            {activeTab === 'files' && (
+                                <div className="animate-in fade-in slide-in-from-left-4 duration-300">
+                                    <div className="mb-4 text-xs text-neutral-400 bg-neutral-900/50 p-3 rounded border border-neutral-800">
+                                        <p className="flex items-center gap-2 font-semibold text-neutral-300"><Icon name="download" size={14}/> Carregamento Automático</p>
+                                        <p className="mt-1 opacity-60">Buscando .geojson na raiz...</p>
+                                    </div>
+                                    <FileUploader label="Transmissão (AC)" accept=".geojson,.json" iconName="zap" loaded={!!transmissao} loading={loadingStates.transmissao} onFileLoaded={setTransmissao} />
+                                    <FileUploader label="Usinas Geradoras" accept=".geojson,.json" iconName="flame" loaded={!!usinas} loading={loadingStates.usinas} onFileLoaded={setUsinas} />
+                                    <FileUploader label="Corrente Contínua" accept=".geojson,.json" iconName="battery" loaded={!!dc} loading={loadingStates.dc} onFileLoaded={setDc} />
+                                    <FileUploader label="Subestações" accept=".geojson,.json" iconName="radio" loaded={!!subestacoes} loading={loadingStates.subestacoes} onFileLoaded={setSubestacoes} />
+                                </div>
+                            )}
+
+                            {activeTab === 'filters' && (
+                                <div className="space-y-6">
+                                    <div>
+                                        <h3 className="text-xs font-bold text-neutral-500 uppercase mb-3 flex items-center gap-2"><Icon name="construction" size={14}/> Planejamento</h3>
+                                        <button onClick={() => setShowPlanned(!showPlanned)} className={`w-full flex justify-between items-center text-xs p-2.5 rounded border transition-colors ${showPlanned ? 'bg-amber-900/20 border-amber-600/50 text-amber-500' : 'border-neutral-700 text-neutral-400'}`}>
+                                            <span>Mostrar Expansões</span>
+                                            {showPlanned && <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>}
+                                        </button>
+                                    </div>
+                                    
+                                    <div>
+                                        <h3 className="text-xs font-bold text-neutral-500 uppercase mb-3 flex items-center gap-2"><Icon name="layers" size={14}/> Camadas</h3>
+                                        {['ac', 'plants', 'subs'].map(layer => (
+                                            <button key={layer} onClick={() => toggleLayer(layer)} className={`w-full flex justify-between items-center text-xs p-2 rounded border mb-2 ${layers[layer] ? 'bg-neutral-800 border-neutral-600 text-white' : 'border-neutral-800 text-neutral-600'}`}>
+                                                <span>{layer === 'ac' ? 'Linhas' : layer === 'plants' ? 'Usinas' : 'Subestações'}</span>
+                                                <div className={`w-2 h-2 rounded-full ${layers[layer] ? 'bg-emerald-500' : 'bg-neutral-700'}`}></div>
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <div>
+                                        <h3 className="text-xs font-bold text-neutral-500 uppercase mb-3 flex items-center gap-2"><Icon name="filter" size={14}/> Tensão (kV)</h3>
+                                        <button onClick={() => setGrayMode(!grayMode)} className={`w-full flex justify-between items-center text-xs p-2 rounded border mb-3 ${grayMode ? 'bg-teal-900/30 border-teal-500/50 text-teal-400' : 'border-neutral-700 text-neutral-400'}`}>
+                                            <div className="flex items-center gap-2"><Icon name="palette" size={14}/> <span>Monocromático</span></div>
+                                            <div className={`w-2 h-2 rounded-full ${grayMode ? 'bg-teal-400' : 'bg-neutral-800'}`}></div>
+                                        </button>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {Object.keys(voltageFilters).map(key => (
+                                                <button key={key} onClick={() => toggleVoltageFilter(key)} className={`text-[10px] p-2 rounded border text-left flex items-center gap-2 ${voltageFilters[key] ? 'bg-neutral-800 border-neutral-600 text-white' : 'border-neutral-800 text-neutral-600'}`}>
+                                                    <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: voltageFilters[key] ? getVoltageColor(key.replace('+','').replace('-',''), grayMode) : '#525252' }}></div>
+                                                    {key} kV
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <h3 className="text-xs font-bold text-neutral-500 uppercase mb-3 flex items-center gap-2"><Icon name="filter" size={14}/> Tipos</h3>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {Object.keys(plantFilters).map(key => (
+                                                <button key={key} onClick={() => togglePlantFilter(key)} className={`text-[10px] p-2 rounded border text-left flex items-center gap-2 ${plantFilters[key] ? 'bg-neutral-800 border-neutral-600 text-white' : 'border-neutral-800 text-neutral-600'}`}>
+                                                    <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: plantFilters[key] ? getPlantColor(key) : '#525252' }}></div>
+                                                    {key}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'legend' && (
+                                <div className="space-y-6">
+                                    <div>
+                                        <h3 className="text-xs font-bold text-neutral-500 uppercase mb-2">Tensão (kV)</h3>
+                                        {[750, 600, 500, 440, 230, 138].map(v => <LegendItem key={v} color={getVoltageColor(v, grayMode)} label={`${v} kV`} />)}
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xs font-bold text-neutral-500 uppercase mb-2">Fonte</h3>
+                                        {['Hidrelétrica', 'Solar', 'Eólica', 'Outros'].map(t => <LegendItem key={t} color={getPlantColor(t)} label={t} />)}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Botão Mobile */}
+                    {!sidebarOpen && (
+                        <div className="absolute top-5 left-5 z-[1000] flex flex-col gap-3">
+                            <button onClick={() => setSidebarOpen(true)} className="p-3 bg-neutral-900 border border-neutral-700 text-white rounded-lg shadow-xl hover:bg-neutral-800"><Icon name="menu"/></button>
+                            <button onClick={() => { setPulseMode(!pulseMode); clearPulse(); }} className={`p-3 border rounded-lg shadow-xl ${pulseMode ? 'bg-indigo-600 border-indigo-500 animate-pulse text-white' : 'bg-neutral-900 border-neutral-700 text-white'}`}><Icon name="waves"/></button>
+                        </div>
+                    )}
+
+                    {/* Mapa */}
+                    <div id="map" ref={mapContainerRef} className={`flex-1 h-full w-full bg-neutral-900 transition-opacity duration-500 ${leafletReady ? 'opacity-100' : 'opacity-0'}`}></div>
+                    
+                    {!leafletReady && (
+                        <div className="absolute inset-0 z-[2000] flex items-center justify-center bg-neutral-950 text-emerald-500">
+                            <div className="flex flex-col items-center gap-4">
+                                <Icon name="activity" size={48} className="animate-pulse"/>
+                                <span className="font-mono text-sm tracking-widest text-emerald-700">INICIALIZANDO...</span>
+                            </div>
+                        </div>
+                    )}
+                    
+                    <div className="absolute bottom-1 right-1 bg-black/60 backdrop-blur-sm px-3 py-1 text-[10px] text-neutral-500 pointer-events-auto z-[400] rounded-tl-lg border-t border-l border-neutral-800">
+                        Dados: ONS | Elaborado por <a href="https://pages-blh.pages.dev/#sobre" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 transition-colors pointer-events-auto underline decoration-neutral-700 underline-offset-2">Guilherme V. Borges</a>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
