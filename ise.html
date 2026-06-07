@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class', theme: { extend: { colors: { gelo: '#f1eeee', chumbo: '#212121', laranja: '#ff5a19', darkbg: '#121212', darkcard: '#1e1e1e' } } } }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Geist:wght@100..900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    .font-geist { font-family: 'Geist', sans-serif; }
+    .font-geist-mono { font-family: 'Geist Mono', monospace; }
+    html { scroll-behavior: smooth; }
+    .hidden-force { display: none !important; }
+    .typing-cursor { display:inline-block; width:4px; height:1em; background-color:#ff5a19; animation:blink 1s step-end infinite; vertical-align:text-bottom; margin-left:4px; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    #mouse-blob { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+    .glass-card { backdrop-filter: blur(18px); }
+
+    .theme-floating { top: 22px; right: 1rem; }
+    body > header { right: 5.25rem !important; padding-right: 0 !important; }
+    @media (min-width: 768px) {
+      .theme-floating { top: 22px; right: 3rem; }
+      body > header { right: 7.25rem !important; padding-right: 0 !important; }
+    }
+    @media (max-width: 767px) {
+      body > header { right: 4.75rem !important; padding-left: 1rem !important; }
+    }
+  </style>
+  <script>
+    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
+  </script>
+  <title>Projeto Finor | Página ISE</title>
+</head>
+<body class="bg-gelo text-chumbo dark:bg-darkbg dark:text-gelo font-geist selection:bg-laranja selection:text-white relative transition-colors duration-500">
+  <button id="theme-toggle" aria-label="Alternar tema" class="theme-floating fixed z-50 p-3 rounded-full bg-white dark:bg-darkcard shadow-lg border border-chumbo/5 dark:border-white/10 hover:scale-110 transition-transform cursor-pointer">
+    <i data-lucide="sun" class="w-5 h-5 text-laranja dark:hidden"></i>
+    <i data-lucide="moon" class="w-5 h-5 text-laranja hidden dark:block"></i>
+  </button>
+  <div class="fixed inset-0 w-full h-full overflow-hidden pointer-events-none z-0 opacity-20 dark:opacity-10">
+    <div id="mouse-blob" class="w-[50vw] h-[50vw] max-w-[600px] max-h-[600px] rounded-full bg-laranja blur-[120px] mix-blend-multiply dark:mix-blend-screen"></div>
+  </div>
+  <header class="fixed top-0 left-0 right-0 z-40 px-6 md:px-12 py-5">
+    <nav class="max-w-7xl mx-auto flex items-center justify-between rounded-full bg-gelo/70 dark:bg-darkbg/70 glass-card border border-chumbo/5 dark:border-white/10 px-5 py-3 shadow-sm">
+      <a href="index.html#hero" class="flex items-center gap-2 font-bold tracking-tight"><span class="w-3 h-3 rounded-full bg-laranja inline-block"></span> FINOR</a>
+      <div class="hidden md:flex items-center gap-6 text-sm font-medium opacity-80">
+        <a class="hover:text-laranja transition-colors" href="index.html#resultados">Resultados</a>
+        <a class="hover:text-laranja transition-colors" href="ico2.html">ICO2</a>
+        <a class="hover:text-laranja transition-colors" href="ise.html">ISE</a>
+        <a class="hover:text-laranja transition-colors" href="index.html#equipe">Equipe</a>
+      </div>
+    </nav>
+  </header>
+  <main class="relative z-10 pt-28">
+    <section class="p-6 md:p-12 lg:p-20 max-w-7xl mx-auto">
+      <div class="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-12 items-center">
+        <div>
+          <a href="index.html#resultados" class="inline-flex items-center gap-2 text-sm opacity-70 hover:text-laranja hover:opacity-100 mb-8"><i data-lucide="arrow-left" class="w-4 h-4"></i> voltar para início</a>
+          <span class="text-laranja font-geist-mono text-sm uppercase tracking-[0.25em]">Página ISE</span>
+          <h1 class="mt-4 text-5xl md:text-7xl font-bold tracking-tight leading-[1.05]">Índice de Sustentabilidade Empresarial</h1>
+          <p class="mt-6 text-xl opacity-75 leading-relaxed">Página institucional e metodológica para apresentar o ISE dentro do projeto Finor. A estrutura está preparada para receber a base ISE, os gráficos do modelo e os indicadores finais.</p>
+        </div>
+        <div class="bg-white dark:bg-darkcard rounded-[2rem] p-8 border border-chumbo/5 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+          <p class="text-sm opacity-60 mb-6">Bloco preparado para métricas do ISE</p>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="rounded-2xl bg-gelo dark:bg-white/5 p-5"><p class="text-xs uppercase tracking-widest opacity-50">R²</p><strong class="block mt-3 text-4xl font-geist-mono text-laranja">--</strong></div>
+            <div class="rounded-2xl bg-gelo dark:bg-white/5 p-5"><p class="text-xs uppercase tracking-widest opacity-50">RMSE</p><strong class="block mt-3 text-4xl font-geist-mono">--</strong></div>
+            <div class="rounded-2xl bg-gelo dark:bg-white/5 p-5"><p class="text-xs uppercase tracking-widest opacity-50">Volatilidade</p><strong class="block mt-3 text-3xl font-geist-mono">--</strong></div>
+            <div class="rounded-2xl bg-gelo dark:bg-white/5 p-5"><p class="text-xs uppercase tracking-widest opacity-50">Correlação</p><strong class="block mt-3 text-3xl font-geist-mono text-laranja">--</strong></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="p-6 md:p-12 lg:p-20 max-w-7xl mx-auto">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <article class="bg-white dark:bg-darkcard rounded-3xl p-7 border border-chumbo/5 dark:border-white/10"><i data-lucide="leaf" class="w-7 h-7 text-laranja mb-6"></i><h3 class="text-2xl font-bold">Sustentabilidade</h3><p class="mt-4 opacity-70 leading-relaxed">Apresenta empresas com práticas de sustentabilidade corporativa, gestão de riscos e compromisso com desempenho responsável.</p></article>
+        <article class="bg-white dark:bg-darkcard rounded-3xl p-7 border border-chumbo/5 dark:border-white/10"><i data-lucide="shield-check" class="w-7 h-7 text-laranja mb-6"></i><h3 class="text-2xl font-bold">Governança</h3><p class="mt-4 opacity-70 leading-relaxed">Permite discutir governança, transparência e qualidade de gestão como fatores que podem reduzir riscos de longo prazo.</p></article>
+        <article class="bg-white dark:bg-darkcard rounded-3xl p-7 border border-chumbo/5 dark:border-white/10"><i data-lucide="bar-chart-3" class="w-7 h-7 text-laranja mb-6"></i><h3 class="text-2xl font-bold">Modelagem</h3><p class="mt-4 opacity-70 leading-relaxed">A página já possui os blocos onde podem entrar regressão, coeficientes, resíduos, heatmap, observado vs previsto e métricas de validação.</p></article>
+      </div>
+    </section>
+
+    <section class="p-6 md:p-12 lg:p-20 max-w-7xl mx-auto">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8"><div><span class="text-laranja font-geist-mono text-sm uppercase tracking-[0.25em]">Estrutura pronta</span><h2 class="text-3xl md:text-5xl font-bold mt-3">Onde inserir os resultados ISE</h2></div><p class="max-w-xl opacity-70">Quando a base do ISE estiver pronta, basta substituir os placeholders abaixo pelos gráficos e indicadores do modelo.</p></div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="rounded-3xl border border-dashed border-chumbo/20 dark:border-white/20 p-8 min-h-[320px] flex flex-col justify-center items-center text-center bg-white/50 dark:bg-darkcard/50"><i data-lucide="image-plus" class="w-10 h-10 text-laranja mb-4"></i><h3 class="text-2xl font-bold">Gráfico observado vs previsto</h3><p class="mt-3 opacity-60">Inserir imagem ou gráfico interativo do modelo ISE.</p></div>
+        <div class="rounded-3xl border border-dashed border-chumbo/20 dark:border-white/20 p-8 min-h-[320px] flex flex-col justify-center items-center text-center bg-white/50 dark:bg-darkcard/50"><i data-lucide="file-spreadsheet" class="w-10 h-10 text-laranja mb-4"></i><h3 class="text-2xl font-bold">Tabela de ativos e coeficientes</h3><p class="mt-3 opacity-60">Inserir ranking dos ativos, pesos, significância e indicadores de risco.</p></div>
+        <div class="rounded-3xl border border-dashed border-chumbo/20 dark:border-white/20 p-8 min-h-[320px] flex flex-col justify-center items-center text-center bg-white/50 dark:bg-darkcard/50"><i data-lucide="grid-3x3" class="w-10 h-10 text-laranja mb-4"></i><h3 class="text-2xl font-bold">Heatmap de correlação</h3><p class="mt-3 opacity-60">Inserir mapa de correlação da base final ISE.</p></div>
+        <div class="rounded-3xl border border-dashed border-chumbo/20 dark:border-white/20 p-8 min-h-[320px] flex flex-col justify-center items-center text-center bg-white/50 dark:bg-darkcard/50"><i data-lucide="scan-line" class="w-10 h-10 text-laranja mb-4"></i><h3 class="text-2xl font-bold">Diagnóstico de resíduos</h3><p class="mt-3 opacity-60">Inserir testes e gráficos de validação do modelo ISE.</p></div>
+      </div>
+    </section>
+  </main>
+  <script>
+    if (window.lucide) lucide.createIcons();
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    if (themeToggleBtn) themeToggleBtn.addEventListener('click', () => { document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); });
+    const blob = document.getElementById('mouse-blob');
+    if (blob) document.body.onpointermove = event => { blob.animate({ left: `${event.clientX}px`, top: `${event.clientY}px` }, { duration: 3000, fill: 'forwards' }); };
+  </script>
+</body>
+</html>

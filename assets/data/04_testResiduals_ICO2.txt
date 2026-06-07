@@ -1,0 +1,45 @@
+
+--- Shapiro-Wilk (até n=5000) ---
+
+	Shapiro-Wilk normality test
+
+data:  res
+W = 0.99134, p-value = 1.103e-06
+
+
+--- Anderson-Darling ---
+
+	Anderson-Darling normality test
+
+data:  res
+A = 2.3065, p-value = 7.634e-06
+
+
+--- Breusch-Pagan (homocedasticidade) ---
+Non-constant Variance Score Test 
+Variance formula: ~ fitted.values 
+Chisquare = 3.486414, Df = 1, p = 0.061874
+
+--- Durbin-Watson (autocorrelação) ---
+ lag Autocorrelation D-W Statistic p-value
+   1      -0.0900216      2.178495   0.002
+ Alternative hypothesis: rho != 0
+
+--- VIF (multicolinearidade) ---
+ ALOS3.SA  ABEV3.SA  AZZA3.SA  B3SA3.SA  BBDC4.SA  BBAS3.SA  BRKM5.SA  CMIG4.SA  CPLE3.SA 
+ 2.896591  1.404259  1.916114  2.159210  2.509190  1.850231  1.268234  1.864060  1.662456 
+ CSAN3.SA  CPFE3.SA  CYRE3.SA ENGI11.SA  FLRY3.SA  GGBR4.SA  HYPE3.SA  ITUB4.SA  RENT3.SA 
+ 1.898198  1.794791  2.656672  2.201149  1.569822  1.789336  1.470596  2.834387  2.167216 
+ LREN3.SA  MGLU3.SA  MBRF3.SA  BEEF3.SA  PSSA3.SA SANB11.SA  TIMS3.SA  TOTS3.SA  UGPA3.SA 
+ 2.283600  1.719941  1.252111  1.313312  1.366665  2.536472  1.389996  1.675212  1.213100 
+ VALE3.SA  VBBR3.SA  WEGE3.SA  YDUQ3.SA 
+ 1.657968  1.940292  1.238896  1.617024 
+
+Assimetria: -0.1286908 
+Curtose:    4.021384 
+
+	Jarque Bera Test
+
+data:  residuals(modelo_final)
+X-squared = 57.415, df = 2, p-value = 3.407e-13
+

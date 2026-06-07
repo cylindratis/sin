@@ -1,746 +1,371 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIN Interativo - ONS</title>
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    
-    <!-- Fonte Geist -->
-    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class', theme: { extend: { colors: { gelo: '#f1eeee', chumbo: '#212121', laranja: '#ff5a19', darkbg: '#121212', darkcard: '#1e1e1e' } } } }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Geist:wght@100..900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    .font-geist { font-family: 'Geist', sans-serif; }
+    .font-geist-mono { font-family: 'Geist Mono', monospace; }
+    html { scroll-behavior: smooth; }
+    .hidden-force { display: none !important; }
+    .typing-cursor { display:inline-block; width:4px; height:1em; background-color:#ff5a19; animation:blink 1s step-end infinite; vertical-align:text-bottom; margin-left:4px; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    #mouse-blob { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+    .glass-card { backdrop-filter: blur(18px); }
 
-    <!-- Estilos Personalizados -->
-    <style>
-        :root {
-            --font-main: 'Geist', sans-serif;
-            --font-mono: 'Geist Mono', monospace;
-        }
+    .theme-floating { top: 22px; right: 1rem; }
+    body > header { right: 5.25rem !important; padding-right: 0 !important; }
+    @media (min-width: 768px) {
+      .theme-floating { top: 22px; right: 3rem; }
+      body > header { right: 7.25rem !important; padding-right: 0 !important; }
+    }
+    @media (max-width: 767px) {
+      body > header { right: 4.75rem !important; padding-left: 1rem !important; }
+    }
+    .native-chart-mini { width: 100%; height: 150px; display: block; }
 
-        body {
-            font-family: var(--font-main);
-            margin: 0;
-            padding: 0;
-            background-color: #171717;
-            overflow: hidden;
-            color: white;
-        }
-
-        /* Scrollbar Customizada */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #171717; }
-        ::-webkit-scrollbar-thumb { background: #404040; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #525252; }
-
-        /* Customização de Popups do Leaflet */
-        .leaflet-popup-content-wrapper {
-            background: rgba(23, 23, 23, 0.95);
-            backdrop-filter: blur(8px);
-            border: 1px solid #404040;
-            border-radius: 8px;
-            padding: 0;
-            color: #fff;
-            font-family: var(--font-main);
-        }
-        .leaflet-popup-tip {
-            background: rgba(23, 23, 23, 0.95);
-        }
-        .leaflet-popup-content { margin: 12px; width: auto !important; }
-        .leaflet-container { background: #171717; width: 100%; height: 100%; outline: none; font-family: var(--font-main); }
-
-        /* --- ANIMAÇÃO DE RESPIRAÇÃO (PULSO) --- */
-        @keyframes breathe {
-            0% {
-                stroke-opacity: 0.15;
-                stroke-width: 1px;
-                stroke: #5eead4; /* Teal-300 base */
-                filter: drop-shadow(0 0 0px rgba(94, 234, 212, 0));
-            }
-            50% {
-                stroke-opacity: 1;
-                stroke-width: 3.5px; /* Pico de brilho */
-                stroke: #ffffff;
-                filter: drop-shadow(0 0 8px rgba(94, 234, 212, 0.8));
-            }
-            100% {
-                stroke-opacity: 0.15;
-                stroke-width: 1px;
-                stroke: #5eead4;
-                filter: drop-shadow(0 0 0px rgba(94, 234, 212, 0));
-            }
-        }
-
-        .pulse-line {
-            stroke-dasharray: none !important; /* Linha sólida para respiração */
-            stroke-linecap: round;
-            animation: breathe 5s ease-in-out infinite; /* Ciclo longo de 5s */
-            z-index: 1000;
-            vector-effect: non-scaling-stroke;
-        }
-
-        /* Estilo para linhas planejadas (tracejadas) */
-        .planned-line {
-            stroke-dasharray: 4, 8;
-            opacity: 0.4;
-        }
-
-        /* Classes de Delay (geradas dinamicamente no JS, mas fallback aqui) */
-        .delay-0 { animation-delay: 0s; }
-        .delay-1 { animation-delay: 0.15s; }
-        /* ... JS irá injetar mais */
-    </style>
+    .brand-reveal { overflow: hidden; display: block; }
+    .brand-reveal > span {
+      display: block;
+      transform: translateY(115%);
+      opacity: 0;
+      transition: transform 900ms cubic-bezier(.16,1,.3,1), opacity 900ms cubic-bezier(.16,1,.3,1);
+      transition-delay: var(--delay, 0ms);
+      will-change: transform, opacity;
+    }
+    .brand-reveal.is-visible > span,
+    .reveal-group.is-visible .brand-reveal > span {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    .fade-reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 900ms cubic-bezier(.16,1,.3,1), transform 900ms cubic-bezier(.16,1,.3,1);
+      transition-delay: var(--delay, 0ms);
+      will-change: transform, opacity;
+    }
+    .fade-reveal.is-visible,
+    .reveal-group.is-visible .fade-reveal {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .thesis-line {
+      border-top: 1px solid rgba(33,33,33,.12);
+    }
+    .dark .thesis-line {
+      border-top-color: rgba(241,238,238,.14);
+    }
+    .brand-icon {
+      color: #ff5a19;
+      border: 1px solid rgba(255,90,25,.45);
+      background: rgba(255,90,25,.08);
+    }
+    .dark .brand-icon {
+      background: rgba(255,90,25,.12);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .brand-reveal > span, .fade-reveal { transition: none; transform: none; opacity: 1; }
+    }
+  </style>
+  <script>
+    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
+  </script>
+  <title>Projeto Finor | Dashboard Sustentável</title>
 </head>
-<body>
-    <div id="root"></div>
+<body class="bg-gelo text-chumbo dark:bg-darkbg dark:text-gelo font-geist selection:bg-laranja selection:text-white relative transition-colors duration-500">
+  <button id="theme-toggle" aria-label="Alternar tema" class="theme-floating fixed z-50 p-3 rounded-full bg-white dark:bg-darkcard shadow-lg border border-chumbo/5 dark:border-white/10 hover:scale-110 transition-transform cursor-pointer">
+    <i data-lucide="sun" class="w-5 h-5 text-laranja dark:hidden"></i>
+    <i data-lucide="moon" class="w-5 h-5 text-laranja hidden dark:block"></i>
+  </button>
+  <div class="fixed inset-0 w-full h-full overflow-hidden pointer-events-none z-0 opacity-20 dark:opacity-10">
+    <div id="mouse-blob" class="w-[50vw] h-[50vw] max-w-[600px] max-h-[600px] rounded-full bg-laranja blur-[120px] mix-blend-multiply dark:mix-blend-screen"></div>
+  </div>
+  <header class="fixed top-0 left-0 right-0 z-40 px-6 md:px-12 py-5">
+    <nav class="max-w-7xl mx-auto flex items-center justify-between rounded-full bg-gelo/70 dark:bg-darkbg/70 glass-card border border-chumbo/5 dark:border-white/10 px-5 py-3 shadow-sm">
+      <a href="index.html#hero" class="flex items-center gap-2 font-bold tracking-tight"><span class="w-3 h-3 rounded-full bg-laranja inline-block"></span> FINOR</a>
+      <div class="hidden md:flex items-center gap-6 text-sm font-medium opacity-80">
+        <a class="hover:text-laranja transition-colors" href="index.html#resultados">Resultados</a>
+        <a class="hover:text-laranja transition-colors" href="ico2.html">ICO2</a>
+        <a class="hover:text-laranja transition-colors" href="ise.html">ISE</a>
+        <a class="hover:text-laranja transition-colors" href="index.html#equipe">Equipe</a>
+      </div>
+    </nav>
+  </header>
+  <main class="relative z-10">
+    <section id="hero" class="min-h-screen flex flex-col justify-center p-6 md:p-12 lg:p-20 max-w-7xl mx-auto pt-28">
+      <div class="max-w-5xl w-full flex flex-col items-start text-left">
+        <span class="mb-8 inline-flex items-center gap-2 text-sm font-geist-mono uppercase tracking-[0.3em] text-laranja"><i data-lucide="sparkles" class="w-4 h-4"></i> Projeto Finor</span>
+        <h1 class="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1]">
+          É POSSÍVEL TER UMA CARTEIRA RENTÁVEL E SUSTENTÁVEL
+          <span id="question-mark" class="inline-block transition-all duration-300 text-laranja opacity-100 scale-100">?</span>
+          <span id="dot-mark" class="text-laranja transition-all duration-300 opacity-0 scale-50 hidden-force">.</span>
+        </h1>
+        <div class="mt-4 md:mt-6 flex items-center justify-start w-full min-h-[3em] md:min-h-[1.5em]">
+          <p class="text-5xl md:text-6xl lg:text-7xl font-bold text-laranja leading-[1.1]"><span id="typed-text"></span><span id="cursor" class="typing-cursor hidden-force"></span></p>
+        </div>
+        <div id="cta-container" class="mt-16 transition-all duration-1000 opacity-0 translate-y-8 pointer-events-none flex flex-wrap gap-4">
+          <a href="#resultados" class="group inline-flex items-center gap-3 bg-chumbo text-white dark:bg-gelo dark:text-chumbo px-8 py-4 rounded-full font-medium text-lg hover:bg-laranja dark:hover:bg-laranja hover:text-white transition-colors duration-300 shadow-xl cursor-pointer">
+            Conhecer os Resultados <i data-lucide="arrow-down" class="w-5 h-5 group-hover:translate-y-1 transition-transform"></i>
+          </a>
+          <a href="ico2.html" class="group inline-flex items-center gap-3 bg-white dark:bg-darkcard px-8 py-4 rounded-full font-medium text-lg border border-chumbo/5 dark:border-white/10 hover:border-laranja/50 transition-all shadow-sm">
+            Ver página ICO2 <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform text-laranja"></i>
+          </a>
+        </div>
+      </div>
+    </section>
 
-    <!-- Scripts: React, ReactDOM, Babel, Leaflet -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <section id="resultados" class="min-h-screen p-6 md:p-12 lg:p-20 max-w-7xl mx-auto pb-12">
+      <div class="flex justify-between items-center mb-12">
+        <div class="h-[1px] bg-chumbo/10 dark:bg-white/10 flex-grow mr-6 transition-colors duration-500"></div>
+        <a href="#hero" class="flex items-center gap-2 opacity-60 hover:opacity-100 hover:text-laranja transition-all font-medium shrink-0"><i data-lucide="arrow-up" class="w-4 h-4"></i> Voltar ao topo</a>
+      </div>
 
-    <!-- Componente React Principal -->
-    <script type="text/babel">
-        const { useState, useEffect, useRef, useMemo } = React;
+      <div class="mb-20 reveal-group" data-reveal-group>
+        <div class="grid grid-cols-1 lg:grid-cols-[0.92fr_1.08fr] gap-10 lg:gap-16 items-start">
+          <div class="lg:sticky lg:top-32">
+            <p class="font-geist-mono text-xs uppercase tracking-[0.32em] text-laranja mb-8 fade-reveal" style="--delay: 80ms;">Index-track sustentável</p>
 
-        // --- ICONES SVG (Substituindo Lucide-React para funcionar sem build) ---
-        const Icon = ({ name, size = 18, className = "" }) => {
-            const icons = {
-                activity: <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>,
-                zap: <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>,
-                radio: <><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1"/></>,
-                flame: <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.1.2-2.2.6-3.3.7-1.9 2-3.32 2-3.32.2 1.12.5 2.12.9 3.12z"/>,
-                battery: <><rect width="16" height="10" x="2" y="7" rx="2" ry="2"/><line x1="22" x2="22" y1="11" y2="13"/></>,
-                menu: <><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></>,
-                x: <><path d="M18 6 6 18"/><path d="m6 6 12 12"/></>,
-                layers: <><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></>,
-                waves: <><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></>,
-                leaf: <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 13-11 13 4.5-5.5 9-9.5 9-14"/>,
-                filter: <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>,
-                construction: <><rect x="2" y="6" width="20" height="8" rx="1"/><path d="M17 14v7"/><path d="M7 14v7"/><path d="M17 3v3"/><path d="M7 3v3"/><path d="M10 14 2.3 6.3"/><path d="m14 6 7.7 7.7"/><path d="m8 6 8 8"/></>,
-                palette: <><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></>,
-                eraser: <><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></>,
-                download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></>
-            };
+            <h2 class="text-4xl md:text-6xl lg:text-7xl font-bold leading-[0.98] tracking-tight">
+              <span class="brand-reveal"><span>Retorno financeiro</span></span>
+              <span class="brand-reveal" style="--delay: 110ms;"><span>e redução de risco</span></span>
+              <span class="brand-reveal" style="--delay: 220ms;"><span>climático não competem.</span></span>
+              <span class="brand-reveal text-laranja mt-4" style="--delay: 360ms;"><span>São o mesmo movimento.</span></span>
+            </h2>
 
-            return (
-                <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    width={size} 
-                    height={size} 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    className={className}
-                >
-                    {icons[name] || <circle cx="12" cy="12" r="10" />}
-                </svg>
-            );
-        };
+            <p class="mt-10 text-2xl md:text-4xl font-semibold leading-tight fade-reveal" style="--delay: 520ms;">
+              Criar <span class="text-laranja">capabilities</span><br>
+              onde o mercado encontra <span class="text-laranja">liabilities</span>.
+            </p>
+          </div>
 
-        // --- UTILITÁRIOS ---
+          <div class="space-y-12">
+            <div class="space-y-8">
+              <p class="text-xl md:text-3xl leading-snug font-medium fade-reveal" style="--delay: 120ms;">
+                As carteiras <span class="text-laranja font-semibold">PIPIPI</span> e <span class="text-laranja font-semibold">POPOPO</span> utilizam os índices <span class="text-laranja font-semibold">ISE</span> e <span class="text-laranja font-semibold">ICO2</span> da B3 como parametrização <span class="text-laranja font-semibold">data-driven</span> para a modelagem do nosso index-track.
+              </p>
 
-        const getVoltageCategory = (voltage) => {
-            const v = Number(voltage);
-            if (v >= 750) return '750+';
-            if (v >= 600) return '600';
-            if (v >= 500) return '500';
-            if (v >= 440) return '440';
-            if (v >= 345) return '345';
-            if (v >= 230) return '230';
-            return '138-';
-        };
+              <p class="text-base md:text-xl leading-relaxed opacity-80 fade-reveal" style="--delay: 220ms;">
+                As empresas que integram essas carteiras demonstram governança superior, estratégias de adaptação climática e características de <span class="text-laranja font-semibold">first-mover advantage</span>. Nossos modelos demonstraram que essa seleção resulta em uma <span class="text-laranja font-semibold">assimetria de risco positiva</span>, promovendo menor volatilidade e retornos consistentes no longo prazo.
+              </p>
 
-        const getVoltageColor = (voltage, grayMode = false) => {
-            if (grayMode) return '#2dd4bf'; // Verde água (Teal-400)
-            
-            const v = Number(voltage);
-            if (v >= 750) return '#7c3aed';
-            if (v >= 600) return '#db2777';
-            if (v >= 500) return '#ef4444';
-            if (v >= 440) return '#f59e0b';
-            if (v >= 345) return '#eab308';
-            if (v >= 230) return '#22c55e';
-            if (v >= 138) return '#3b82f6';
-            return '#64748b';
-        };
-
-        const getPlantCategory = (typeId, typeName) => {
-            const t = (typeId || '').toUpperCase();
-            const n = (typeName || '').toUpperCase();
-            if (t === 'UHE' || n.includes('HIDRO')) return 'Hidrelétrica';
-            if (t === 'UTE' || n.includes('TERMICA')) return 'Térmica';
-            if (t === 'EOL' || n.includes('EOLICA') || n.includes('EOLIELETRICA')) return 'Eólica';
-            if (t === 'UFV' || n.includes('SOLAR')) return 'Solar';
-            if (t === 'UCN' || n.includes('NUCLEAR')) return 'Nuclear';
-            return 'Outros';
-        };
-
-        const getPlantColor = (category) => {
-            switch (category) {
-                case 'Hidrelétrica': return '#3b82f6';
-                case 'Térmica': return '#f97316';
-                case 'Eólica': return '#22d3ee';
-                case 'Solar': return '#fbbf24';
-                case 'Nuclear': return '#a855f7';
-                case 'Outros': return '#10b981'; 
-                default: return '#9ca3af';
-            }
-        };
-
-        const getDistance = (lat1, lng1, lat2, lng2) => {
-            return Math.sqrt(Math.pow(lat2 - lat1, 2) + Math.pow(lng2 - lng1, 2));
-        };
-
-        const isOperational = (props) => {
-            if (props.DTENTRADA) {
-                const entryDate = new Date(props.DTENTRADA);
-                if (entryDate > new Date()) return false;
-            } else if (props.DTPREVISTA) {
-                return false;
-            }
-            return true; 
-        };
-
-        // --- COMPONENTES DA UI ---
-
-        const FileUploader = ({ label, accept, onFileLoaded, loaded, iconName, loading }) => {
-            const handleFileChange = (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    try {
-                        const json = JSON.parse(event.target.result);
-                        onFileLoaded(json);
-                    } catch (err) {
-                        alert("Erro ao ler JSON: " + err.message);
-                    }
-                };
-                reader.readAsText(file);
-            };
-
-            return (
-                <div className={`flex items-center justify-between p-3 mb-2 rounded-lg border transition-all duration-200 ${loaded ? 'bg-emerald-900/20 border-emerald-500/50' : 'bg-neutral-800 border-neutral-700 hover:border-neutral-500'}`}>
-                    <div className="flex items-center gap-3 overflow-hidden">
-                        <div className={`p-2 rounded-md ${loaded ? 'bg-emerald-500/20 text-emerald-400' : 'bg-neutral-700 text-neutral-400'}`}>
-                            <Icon name={iconName} size={18} />
-                        </div>
-                        <div className="flex flex-col min-w-0">
-                            <span className="text-sm font-medium text-neutral-200 truncate pr-2">{label}</span>
-                            <span className="text-xs text-neutral-500 font-mono flex items-center gap-1">
-                                {loading ? (
-                                    <span className="animate-pulse text-amber-400">Buscando...</span>
-                                ) : (
-                                    loaded ? 'Carregado' : 'Aguardando arquivo...'
-                                )}
-                            </span>
-                        </div>
-                    </div>
-                    <label className="cursor-pointer px-3 py-1.5 text-xs font-medium bg-neutral-700 hover:bg-neutral-600 text-white rounded-md transition-colors whitespace-nowrap">
-                        {loaded ? 'Trocar' : 'Carregar'}
-                        <input type="file" accept={accept} onChange={handleFileChange} className="hidden" />
-                    </label>
-                </div>
-            );
-        };
-
-        const LegendItem = ({ color, label }) => (
-            <div className="flex items-center gap-3 py-1">
-                <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: color }}></div>
-                <span className="text-xs text-neutral-300 font-medium">{label}</span>
+              <div class="thesis-line pt-8 fade-reveal" style="--delay: 320ms;">
+                <p class="text-2xl md:text-4xl font-bold leading-tight">
+                  Cada camada se reforça.<br>
+                  <span class="text-laranja">Juntas, fecham um loop</span> que nenhuma carteira tradicional oferece.
+                </p>
+              </div>
             </div>
-        );
 
-        // --- APP PRINCIPAL ---
+            <div class="thesis-line pt-10 grid grid-cols-[auto_1fr] gap-5 md:gap-8 fade-reveal" style="--delay: 120ms;">
+              <div class="brand-icon w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center shrink-0">
+                <i data-lucide="shield-check" class="w-7 h-7 md:w-8 md:h-8"></i>
+              </div>
+              <div>
+                <p class="font-geist-mono text-laranja text-sm uppercase tracking-[0.26em] mb-3">01 — Proteção</p>
+                <h3 class="text-3xl md:text-5xl font-bold leading-tight tracking-tight mb-5">
+                  Investir verde reduz sua exposição ao risco que nenhum hedge cobre.
+                </h3>
+                <p class="text-base md:text-xl leading-relaxed opacity-80">
+                  Carteiras com legado em O&amp;G acumulam risco climático físico e regulatório silenciosamente — até que um evento força a repricing abrupta. Os ativos desta carteira foram selecionados exatamente por estarem no lado certo dessa transição: empresas que já reduziram sua exposição ao risco de legado e seguem se adaptando.
+                </p>
 
-        function App() {
-            // Estados de Dados
-            const [transmissao, setTransmissao] = useState(null);
-            const [dc, setDc] = useState(null);
-            const [subestacoes, setSubestacoes] = useState(null);
-            const [usinas, setUsinas] = useState(null);
-            
-            // Estados de Carregamento
-            const [loadingStates, setLoadingStates] = useState({
-                transmissao: false, dc: false, subestacoes: false, usinas: false
-            });
-            
-            // Estados de UI
-            const [sidebarOpen, setSidebarOpen] = useState(true);
-            const [activeTab, setActiveTab] = useState('files');
-            const [leafletReady, setLeafletReady] = useState(false);
-            
-            // Estados de Modo Interativo
-            const [pulseMode, setPulseMode] = useState(false);
-            const [pulsingLines, setPulsingLines] = useState(new Map()); 
-            const [selectedPlant, setSelectedPlant] = useState(null); 
-
-            // Filtros
-            const [showPlanned, setShowPlanned] = useState(false); 
-            const [grayMode, setGrayMode] = useState(false);
-            const [layers, setLayers] = useState({ ac: true, dc: true, subs: true, plants: true });
-            
-            const [voltageFilters, setVoltageFilters] = useState({
-                '750+': true, '600': true, '500': true, '440': true, '345': true, '230': true, '138-': true
-            });
-
-            const [plantFilters, setPlantFilters] = useState({
-                'Hidrelétrica': true, 'Térmica': true, 'Eólica': true, 'Solar': true, 'Nuclear': true, 'Outros': true
-            });
-
-            const mapContainerRef = useRef(null);
-            const mapInstanceRef = useRef(null);
-            const layerGroupsRef = useRef({ ac: null, dc: null, subs: null, plants: null });
-
-            // Injeção dinâmica de CSS Delay
-            useEffect(() => {
-                const style = document.createElement('style');
-                style.innerHTML = Array.from({ length: 40 }).map((_, i) => `
-                    .delay-${i} { animation-delay: ${i * 0.15}s !important; }
-                `).join('');
-                document.head.appendChild(style);
-            }, []);
-
-            // Check Leaflet
-            useEffect(() => {
-                if (window.L) setLeafletReady(true);
-            }, []);
-
-            // Auto-fetch Data
-            useEffect(() => {
-                const fetchGeoJSON = async (filename, setter, key) => {
-                    setLoadingStates(prev => ({ ...prev, [key]: true }));
-                    try {
-                        const response = await fetch(filename);
-                        if (response.ok) {
-                            const data = await response.json();
-                            setter(data);
-                        }
-                    } catch (error) {
-                        console.warn(`Carregamento automático falhou para ${filename}. Use upload manual.`);
-                    } finally {
-                        setLoadingStates(prev => ({ ...prev, [key]: false }));
-                    }
-                };
-
-                fetchGeoJSON('transmissao.geojson', setTransmissao, 'transmissao');
-                fetchGeoJSON('correntecontinua.geojson', setDc, 'dc');
-                fetchGeoJSON('subestacoes.geojson', setSubestacoes, 'subestacoes');
-                fetchGeoJSON('usinas.geojson', setUsinas, 'usinas');
-            }, []);
-
-            // Inicializar Mapa
-            useEffect(() => {
-                if (!leafletReady || !mapContainerRef.current) return;
-                if (mapInstanceRef.current) { mapInstanceRef.current.remove(); mapInstanceRef.current = null; }
-
-                try {
-                    const map = L.map(mapContainerRef.current, { 
-                        zoomControl: false, 
-                        attributionControl: false,
-                        preferCanvas: false
-                    }).setView([-15.793889, -47.882778], 4);
-                    
-                    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                        attribution: '&copy; OpenStreetMap, &copy; CARTO',
-                        subdomains: 'abcd',
-                        maxZoom: 18
-                    }).addTo(map);
-
-                    const svgRenderer = L.svg({ padding: 0.5 });
-
-                    layerGroupsRef.current.ac = L.layerGroup({ renderer: svgRenderer }).addTo(map);
-                    layerGroupsRef.current.dc = L.layerGroup({ renderer: svgRenderer }).addTo(map);
-                    layerGroupsRef.current.subs = L.layerGroup({ renderer: svgRenderer }).addTo(map);
-                    layerGroupsRef.current.plants = L.layerGroup({ renderer: svgRenderer }).addTo(map);
-
-                    mapInstanceRef.current = map;
-                } catch (e) { console.error(e); }
-
-                return () => { if (mapInstanceRef.current) { mapInstanceRef.current.remove(); mapInstanceRef.current = null; } };
-            }, [leafletReady]);
-
-            // Lógica de Pulso (BFS)
-            const handlePlantPulse = (plantLat, plantLng) => {
-                if (!transmissao || !pulseMode) return;
-                
-                setSelectedPlant({ lat: plantLat, lng: plantLng });
-
-                const QUEUE_LIMIT = 1000; 
-                const MAX_DEPTH = 30;
-                const THRESHOLD = 0.3;
-
-                const visitedLines = new Map(); 
-                const queue = [{ lat: plantLat, lng: plantLng, depth: 0 }];
-                let iterations = 0;
-
-                while (queue.length > 0 && iterations < QUEUE_LIMIT) {
-                    const current = queue.shift();
-                    if (current.depth >= MAX_DEPTH) continue;
-
-                    transmissao.features.forEach((feature, idx) => {
-                        if (visitedLines.has(idx)) return;
-                        if (!showPlanned && !isOperational(feature.properties)) return; 
-                        
-                        const vCat = getVoltageCategory(feature.properties.VN);
-                        if (!voltageFilters[vCat]) return;
-
-                        if (!feature.geometry || !feature.geometry.coordinates) return;
-
-                        const coords = feature.geometry.coordinates;
-                        const start = coords[0]; 
-                        const end = coords[coords.length - 1];
-
-                        const distStart = getDistance(current.lat, current.lng, start[1], start[0]);
-                        const distEnd = getDistance(current.lat, current.lng, end[1], end[0]);
-
-                        if (distStart < THRESHOLD) {
-                            visitedLines.set(idx, { reversed: false, depth: current.depth }); 
-                            queue.push({ lat: end[1], lng: end[0], depth: current.depth + 1 });
-                        } else if (distEnd < THRESHOLD) {
-                            visitedLines.set(idx, { reversed: true, depth: current.depth }); 
-                            queue.push({ lat: start[1], lng: start[0], depth: current.depth + 1 });
-                        }
-                    });
-                    iterations++;
-                }
-                setPulsingLines(visitedLines);
-            };
-
-            const clearPulse = () => {
-                setPulsingLines(new Map());
-                setSelectedPlant(null);
-            };
-
-            const createPopup = (title, type, details) => {
-                const detailsHtml = Object.entries(details)
-                    .filter(([_, val]) => val)
-                    .map(([key, val]) => `
-                        <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; border-bottom: 1px solid #333;">
-                            <span style="color: #9ca3af; font-family: monospace;">${key}:</span>
-                            <span style="color: #f3f4f6; font-weight: 500; margin-left: 8px; text-align: right;">${val}</span>
-                        </div>
-                    `).join('');
-                return `<div style="font-family: 'Geist', sans-serif; min-width: 220px;">
-                    <h3 style="font-weight: 700; font-size: 13px; margin: 0 0 10px 0; padding-bottom: 6px; border-bottom: 2px solid #525252; color: #fff;">${title || 'Sem Nome'}</h3>
-                    <div>${detailsHtml}</div>
-                    <div style="margin-top: 10px; font-size: 9px; color: #22d3ee; text-transform: uppercase; text-align: right; font-weight: bold;">${type}</div>
-                </div>`;
-            };
-
-            // Render Layers
-            useEffect(() => {
-                if (!mapInstanceRef.current) return;
-
-                // AC Transmission
-                const acGroup = layerGroupsRef.current.ac;
-                acGroup.clearLayers();
-                if (transmissao && layers.ac) {
-                    transmissao.features.forEach((f, idx) => {
-                        const props = f.properties;
-                        const operational = isOperational(props);
-                        if (!showPlanned && !operational) return;
-                        if (!voltageFilters[getVoltageCategory(props.VN)]) return;
-
-                        let coords = f.geometry.coordinates.map(c => [c[1], c[0]]);
-                        const pulseData = pulsingLines.get(idx);
-                        const isPulsing = !!pulseData;
-                        
-                        if (pulseMode && isPulsing && pulseData.reversed) coords = coords.reverse();
-
-                        let opacity = 0.8;
-                        if (pulseMode) opacity = isPulsing ? 1.0 : 0.05;
-
-                        const classList = [];
-                        if (isPulsing) {
-                            classList.push('pulse-line');
-                            classList.push(`delay-${Math.min(pulseData.depth, 39)}`);
-                        }
-                        if (!operational) classList.push('planned-line');
-
-                        const polyline = L.polyline(coords, {
-                            color: getVoltageColor(props.VN, grayMode),
-                            weight: isPulsing ? 2.5 : 1.5,
-                            opacity: opacity,
-                            className: classList.join(' ') || undefined,
-                            dashArray: operational ? null : '5, 10'
-                        });
-
-                        if (!pulseMode) polyline.bindPopup(createPopup(props.NOMELONGO, 'TRANSMISSÃO AC', {'Tensão': props.VN + ' kV', 'Agente': props.AGE_NOME}));
-                        acGroup.addLayer(polyline);
-                    });
-                }
-
-                // Plants
-                const plantsGroup = layerGroupsRef.current.plants;
-                plantsGroup.clearLayers();
-                if (usinas && layers.plants) {
-                    usinas.features.forEach(f => {
-                        const props = f.properties;
-                        const operational = isOperational(props);
-                        if (!showPlanned && !operational) return;
-                        
-                        const cat = getPlantCategory(props.TPUSINA_ID, props.NOME_TPUSINA);
-                        if (!plantFilters[cat]) return;
-
-                        const [lng, lat] = f.geometry.coordinates;
-                        let opacity = 0.9;
-                        let isSelected = false;
-
-                        if (pulseMode) {
-                            if (selectedPlant) {
-                                isSelected = (selectedPlant.lat === lat && selectedPlant.lng === lng);
-                                opacity = isSelected ? 1 : 0.1;
-                            } else opacity = 0.8;
-                        }
-
-                        const marker = L.circleMarker([lat, lng], {
-                            radius: (pulseMode && isSelected) ? 8 : 3,
-                            color: (pulseMode && isSelected) ? '#fff' : '#000',
-                            weight: (pulseMode && isSelected) ? 2 : 1,
-                            fillColor: getPlantColor(cat),
-                            fillOpacity: opacity,
-                            opacity: opacity,
-                            className: pulseMode ? 'cursor-pointer hover:stroke-white' : ''
-                        });
-
-                        marker.on('click', () => { if (pulseMode) handlePlantPulse(lat, lng); });
-                        if (!pulseMode) marker.bindPopup(createPopup(props.NOMELONGO, 'USINA', {'Tipo': props.NOME_TPUSINA, 'Capacidade': props.VAL_POTENCIA + ' MW'}));
-                        plantsGroup.addLayer(marker);
-                    });
-                }
-
-                // DC & Subs
-                const dcGroup = layerGroupsRef.current.dc;
-                dcGroup.clearLayers();
-                if (dc && layers.dc) {
-                    dc.features.forEach(f => {
-                        if (!showPlanned && !isOperational(f.properties)) return;
-                        const coords = f.geometry.coordinates.map(c => [c[1], c[0]]);
-                        const poly = L.polyline(coords, {
-                            color: grayMode ? '#525252' : '#db2777',
-                            weight: 3, dashArray: '5,5', opacity: pulseMode ? 0.05 : 1
-                        });
-                        if (!pulseMode) poly.bindPopup(createPopup(f.properties.NOMELONGO, 'HVDC', {}));
-                        dcGroup.addLayer(poly);
-                    });
-                }
-
-                const subGroup = layerGroupsRef.current.subs;
-                subGroup.clearLayers();
-                if (subestacoes && layers.subs) {
-                    subestacoes.features.forEach(f => {
-                        if (!showPlanned && !isOperational(f.properties)) return;
-                        const [lng, lat] = f.geometry.coordinates;
-                        const m = L.circleMarker([lat, lng], {
-                            radius: 1.5, color: '#fff', fillColor: '#fff', weight: 0,
-                            fillOpacity: pulseMode ? 0.05 : 0.8
-                        });
-                        if (!pulseMode) m.bindPopup(createPopup(f.properties.NOMELONGO, 'SUBESTAÇÃO', {}));
-                        subGroup.addLayer(m);
-                    });
-                }
-
-            }, [transmissao, usinas, dc, subestacoes, layers, pulseMode, showPlanned, grayMode, voltageFilters, plantFilters, pulsingLines, selectedPlant]);
-
-            // Stats
-            const stats = useMemo(() => {
-                let kmTotal = 0, usinasTotal = 0, cleanCount = 0;
-                if (transmissao?.features) {
-                    kmTotal += transmissao.features.reduce((acc, f) => acc + (f.properties['SHAPE.STLength()'] || 0.5), 0);
-                }
-                if (usinas?.features) {
-                    const filtered = usinas.features.filter(f => showPlanned || isOperational(f.properties));
-                    usinasTotal = filtered.length;
-                    cleanCount = filtered.filter(f => {
-                        const cat = getPlantCategory(f.properties.TPUSINA_ID, f.properties.NOME_TPUSINA);
-                        return ['Hidrelétrica', 'Eólica', 'Solar', 'Outros'].includes(cat);
-                    }).length;
-                }
-                return { 
-                    estimatedKm: Math.round(kmTotal * 111), 
-                    usinasTotal, 
-                    cleanPercentage: usinasTotal > 0 ? Math.round((cleanCount / usinasTotal) * 100) : 0 
-                };
-            }, [transmissao, usinas, showPlanned]);
-
-            // Toggles
-            const toggleLayer = (k) => setLayers(p => ({ ...p, [k]: !p[k] }));
-            const togglePlantFilter = (k) => setPlantFilters(p => ({ ...p, [k]: !p[k] }));
-            const toggleVoltageFilter = (k) => setVoltageFilters(p => ({ ...p, [k]: !p[k] }));
-
-            return (
-                <div className="flex h-screen w-full">
-                    {/* Sidebar */}
-                    <div className={`absolute z-[1000] top-0 left-0 h-full bg-neutral-900/95 backdrop-blur-md border-r border-neutral-800 transition-all duration-300 ease-in-out flex flex-col ${sidebarOpen ? 'w-80 translate-x-0' : 'w-80 -translate-x-full'}`}>
-                        {/* Header */}
-                        <div className="p-5 border-b border-neutral-800 flex justify-between items-center bg-neutral-900">
-                            <div>
-                                <h1 className="font-bold text-lg tracking-tight flex items-center gap-2 text-white">
-                                    <Icon name="activity" className="text-emerald-500" /> SIN Interativo
-                                </h1>
-                                <p className="text-xs text-neutral-500 font-mono mt-1">Sistema Interligado Nacional</p>
-                            </div>
-                            <button onClick={() => setSidebarOpen(false)} className="p-1 hover:bg-neutral-800 rounded text-neutral-400"><Icon name="x" /></button>
-                        </div>
-
-                        {/* Painel Modo Pulso */}
-                        <div className="p-4 border-b border-neutral-800 bg-neutral-800/30 space-y-3">
-                            <button onClick={() => { setPulseMode(!pulseMode); clearPulse(); }}
-                                className={`w-full py-3 px-4 rounded-lg flex items-center justify-between font-medium transition-all text-sm border shadow-lg ${pulseMode ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-neutral-800 border-neutral-700 text-neutral-400 hover:bg-neutral-700'}`}>
-                                <span className="flex items-center gap-2"><Icon name="waves" /> Modo Pulso</span>
-                                {pulseMode && <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>}
-                            </button>
-                            
-                            {pulseMode && selectedPlant && (
-                                <button onClick={clearPulse} className="w-full py-2 px-3 text-xs bg-red-900/20 text-red-400 border border-red-900/50 rounded hover:bg-red-900/40 flex items-center justify-center gap-2 transition-colors">
-                                    <Icon name="eraser" size={14}/> Desselecionar Usina
-                                </button>
-                            )}
-                            <p className="text-[10px] text-neutral-500 text-center px-1">
-                                {pulseMode ? (selectedPlant ? 'Propagação ativa.' : 'Clique em uma usina para iniciar.') : 'Ative para visualizar o fluxo.'}
-                            </p>
-                        </div>
-
-                        {/* Widget Renovável */}
-                        <div className="mx-5 mt-4 p-4 bg-gradient-to-br from-emerald-900/40 to-neutral-900 border border-emerald-800/50 rounded-xl flex items-center justify-between shadow-lg">
-                            <div>
-                                <p className="text-[10px] text-emerald-400 uppercase font-bold tracking-widest mb-1">Renovável</p>
-                                <div className="flex items-baseline gap-1">
-                                    <span className="text-2xl font-bold text-white">{stats.cleanPercentage}%</span>
-                                    <span className="text-xs text-neutral-400">do grid</span>
-                                </div>
-                            </div>
-                            <div className="p-2 bg-emerald-500/20 rounded-lg text-emerald-400"><Icon name="leaf" size={24}/></div>
-                        </div>
-
-                        {/* Tabs */}
-                        <div className="flex border-b border-neutral-800 mt-2">
-                            {['files', 'filters', 'legend'].map(tab => (
-                                <button key={tab} onClick={() => setActiveTab(tab)} 
-                                    className={`flex-1 py-3 text-xs font-medium uppercase tracking-wider ${activeTab === tab ? 'text-emerald-400 border-b-2 border-emerald-500' : 'text-neutral-500 hover:text-neutral-300'}`}>
-                                    {tab === 'files' ? 'Dados' : tab === 'filters' ? 'Filtros' : 'Legenda'}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* Content */}
-                        <div className="flex-1 overflow-y-auto p-5 space-y-6">
-                            {activeTab === 'files' && (
-                                <div className="animate-in fade-in slide-in-from-left-4 duration-300">
-                                    <div className="mb-4 text-xs text-neutral-400 bg-neutral-900/50 p-3 rounded border border-neutral-800">
-                                        <p className="flex items-center gap-2 font-semibold text-neutral-300"><Icon name="download" size={14}/> Carregamento Automático</p>
-                                        <p className="mt-1 opacity-60">Buscando .geojson na raiz...</p>
-                                    </div>
-                                    <FileUploader label="Transmissão (AC)" accept=".geojson,.json" iconName="zap" loaded={!!transmissao} loading={loadingStates.transmissao} onFileLoaded={setTransmissao} />
-                                    <FileUploader label="Usinas Geradoras" accept=".geojson,.json" iconName="flame" loaded={!!usinas} loading={loadingStates.usinas} onFileLoaded={setUsinas} />
-                                    <FileUploader label="Corrente Contínua" accept=".geojson,.json" iconName="battery" loaded={!!dc} loading={loadingStates.dc} onFileLoaded={setDc} />
-                                    <FileUploader label="Subestações" accept=".geojson,.json" iconName="radio" loaded={!!subestacoes} loading={loadingStates.subestacoes} onFileLoaded={setSubestacoes} />
-                                </div>
-                            )}
-
-                            {activeTab === 'filters' && (
-                                <div className="space-y-6">
-                                    <div>
-                                        <h3 className="text-xs font-bold text-neutral-500 uppercase mb-3 flex items-center gap-2"><Icon name="construction" size={14}/> Planejamento</h3>
-                                        <button onClick={() => setShowPlanned(!showPlanned)} className={`w-full flex justify-between items-center text-xs p-2.5 rounded border transition-colors ${showPlanned ? 'bg-amber-900/20 border-amber-600/50 text-amber-500' : 'border-neutral-700 text-neutral-400'}`}>
-                                            <span>Mostrar Expansões</span>
-                                            {showPlanned && <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>}
-                                        </button>
-                                    </div>
-                                    
-                                    <div>
-                                        <h3 className="text-xs font-bold text-neutral-500 uppercase mb-3 flex items-center gap-2"><Icon name="layers" size={14}/> Camadas</h3>
-                                        {['ac', 'plants', 'subs'].map(layer => (
-                                            <button key={layer} onClick={() => toggleLayer(layer)} className={`w-full flex justify-between items-center text-xs p-2 rounded border mb-2 ${layers[layer] ? 'bg-neutral-800 border-neutral-600 text-white' : 'border-neutral-800 text-neutral-600'}`}>
-                                                <span>{layer === 'ac' ? 'Linhas' : layer === 'plants' ? 'Usinas' : 'Subestações'}</span>
-                                                <div className={`w-2 h-2 rounded-full ${layers[layer] ? 'bg-emerald-500' : 'bg-neutral-700'}`}></div>
-                                            </button>
-                                        ))}
-                                    </div>
-
-                                    <div>
-                                        <h3 className="text-xs font-bold text-neutral-500 uppercase mb-3 flex items-center gap-2"><Icon name="filter" size={14}/> Tensão (kV)</h3>
-                                        <button onClick={() => setGrayMode(!grayMode)} className={`w-full flex justify-between items-center text-xs p-2 rounded border mb-3 ${grayMode ? 'bg-teal-900/30 border-teal-500/50 text-teal-400' : 'border-neutral-700 text-neutral-400'}`}>
-                                            <div className="flex items-center gap-2"><Icon name="palette" size={14}/> <span>Monocromático</span></div>
-                                            <div className={`w-2 h-2 rounded-full ${grayMode ? 'bg-teal-400' : 'bg-neutral-800'}`}></div>
-                                        </button>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {Object.keys(voltageFilters).map(key => (
-                                                <button key={key} onClick={() => toggleVoltageFilter(key)} className={`text-[10px] p-2 rounded border text-left flex items-center gap-2 ${voltageFilters[key] ? 'bg-neutral-800 border-neutral-600 text-white' : 'border-neutral-800 text-neutral-600'}`}>
-                                                    <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: voltageFilters[key] ? getVoltageColor(key.replace('+','').replace('-',''), grayMode) : '#525252' }}></div>
-                                                    {key} kV
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <h3 className="text-xs font-bold text-neutral-500 uppercase mb-3 flex items-center gap-2"><Icon name="filter" size={14}/> Tipos</h3>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {Object.keys(plantFilters).map(key => (
-                                                <button key={key} onClick={() => togglePlantFilter(key)} className={`text-[10px] p-2 rounded border text-left flex items-center gap-2 ${plantFilters[key] ? 'bg-neutral-800 border-neutral-600 text-white' : 'border-neutral-800 text-neutral-600'}`}>
-                                                    <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: plantFilters[key] ? getPlantColor(key) : '#525252' }}></div>
-                                                    {key}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {activeTab === 'legend' && (
-                                <div className="space-y-6">
-                                    <div>
-                                        <h3 className="text-xs font-bold text-neutral-500 uppercase mb-2">Tensão (kV)</h3>
-                                        {[750, 600, 500, 440, 230, 138].map(v => <LegendItem key={v} color={getVoltageColor(v, grayMode)} label={`${v} kV`} />)}
-                                    </div>
-                                    <div>
-                                        <h3 className="text-xs font-bold text-neutral-500 uppercase mb-2">Fonte</h3>
-                                        {['Hidrelétrica', 'Solar', 'Eólica', 'Outros'].map(t => <LegendItem key={t} color={getPlantColor(t)} label={t} />)}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Botão Mobile */}
-                    {!sidebarOpen && (
-                        <div className="absolute top-5 left-5 z-[1000] flex flex-col gap-3">
-                            <button onClick={() => setSidebarOpen(true)} className="p-3 bg-neutral-900 border border-neutral-700 text-white rounded-lg shadow-xl hover:bg-neutral-800"><Icon name="menu"/></button>
-                            <button onClick={() => { setPulseMode(!pulseMode); clearPulse(); }} className={`p-3 border rounded-lg shadow-xl ${pulseMode ? 'bg-indigo-600 border-indigo-500 animate-pulse text-white' : 'bg-neutral-900 border-neutral-700 text-white'}`}><Icon name="waves"/></button>
-                        </div>
-                    )}
-
-                    {/* Mapa */}
-                    <div id="map" ref={mapContainerRef} className={`flex-1 h-full w-full bg-neutral-900 transition-opacity duration-500 ${leafletReady ? 'opacity-100' : 'opacity-0'}`}></div>
-                    
-                    {!leafletReady && (
-                        <div className="absolute inset-0 z-[2000] flex items-center justify-center bg-neutral-950 text-emerald-500">
-                            <div className="flex flex-col items-center gap-4">
-                                <Icon name="activity" size={48} className="animate-pulse"/>
-                                <span className="font-mono text-sm tracking-widest text-emerald-700">INICIALIZANDO...</span>
-                            </div>
-                        </div>
-                    )}
-                    
-                    <div className="absolute bottom-1 right-1 bg-black/60 backdrop-blur-sm px-3 py-1 text-[10px] text-neutral-500 pointer-events-auto z-[400] rounded-tl-lg border-t border-l border-neutral-800">
-                        Dados: ONS | Elaborado por <a href="https://pages-blh.pages.dev/#sobre" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-400 transition-colors pointer-events-auto underline decoration-neutral-700 underline-offset-2">Guilherme V. Borges</a>
-                    </div>
+                <div class="mt-8 thesis-line pt-8 grid grid-cols-1 md:grid-cols-[220px_1fr] gap-5 md:gap-8 items-start">
+                  <div>
+                    <div class="text-7xl md:text-8xl font-geist-mono font-bold text-laranja leading-none">75%</div>
+                    <p class="mt-3 text-xs font-geist-mono uppercase tracking-[0.2em] opacity-55">Valor Econômico</p>
+                  </div>
+                  <p class="text-lg md:text-2xl leading-snug font-medium">
+                    das empresas que integravam a carteira em 2025 e seguiram em 2026 reduziram a intensidade de carbono em relação à receita.
+                  </p>
                 </div>
-            );
-        }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
+                <p class="mt-8 text-base md:text-xl leading-relaxed opacity-80">
+                  Isso não é coincidência — é critério. <span class="text-laranja font-semibold">ISE</span> e <span class="text-laranja font-semibold">ICO2</span> selecionam empresas que já estão se movendo. A proteção é estrutural, não pontual.
+                </p>
+              </div>
+            </div>
+
+            <div class="thesis-line pt-10 grid grid-cols-[auto_1fr] gap-5 md:gap-8 fade-reveal" style="--delay: 160ms;">
+              <div class="brand-icon w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center shrink-0">
+                <i data-lucide="arrow-left-right" class="w-7 h-7 md:w-8 md:h-8"></i>
+              </div>
+              <div>
+                <p class="font-geist-mono text-laranja text-sm uppercase tracking-[0.26em] mb-3">02 — Causalidade</p>
+                <h3 class="text-3xl md:text-5xl font-bold leading-tight tracking-tight mb-5">
+                  Seu capital acelera a transição — e reduz o risco que ameaça o sistema.
+                </h3>
+                <p class="text-base md:text-xl leading-relaxed opacity-80">
+                  Capital direcionado a empresas de menor intensidade carbônica não é só alocação eficiente — é intervenção no ciclo. Cada real investido aqui financia a descarbonização da economia real, reduzindo a frequência e a severidade dos eventos climáticos extremos que propagam crises sistêmicas. Você não está apenas se protegendo do risco. <span class="text-laranja font-semibold">Está reduzindo ele na origem.</span>
+                </p>
+
+                <div class="mt-8 thesis-line pt-8">
+                  <p class="font-geist-mono text-laranja text-xs uppercase tracking-[0.26em] mb-4">IPCC-ONU</p>
+                  <p class="text-2xl md:text-4xl font-semibold leading-tight">
+                    “Sem reduções significativas nas emissões de Gases de Efeito Estufa (GEE), o mundo enfrentará impactos climáticos cada vez mais severos.”
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <h3 class="text-2xl font-bold mb-8 flex items-center gap-3"><i data-lucide="activity" class="text-laranja w-6 h-6"></i> Páginas do estudo</h3>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <a href="ico2.html" class="bg-white dark:bg-darkcard rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-chumbo/5 dark:border-white/5 hover:-translate-y-1 transition-all duration-300 group">
+          <div class="flex justify-between items-start mb-6"><div class="p-3 bg-gelo dark:bg-white/5 rounded-xl"><i data-lucide="cloud" class="w-6 h-6 text-laranja"></i></div><span class="text-xs font-bold uppercase tracking-wider bg-chumbo dark:bg-gelo text-white dark:text-chumbo px-3 py-1 rounded-full">Modelo ICO2</span></div>
+          <h4 class="text-xl font-bold mb-2">Índice Carbono Eficiente</h4>
+          <p class="text-sm opacity-60 mb-6">Página com métricas do modelo, gráficos observados vs previstos, diagnóstico de resíduos, correlação e VIF.</p>
+          <div class="flex items-end gap-3"><span class="text-5xl font-geist-mono font-bold text-laranja">0,9321</span><span class="text-sm font-medium opacity-60 mb-2">R² ajustado</span></div>
+          <div class="mt-8 pt-6 border-t border-gelo dark:border-white/10 flex items-center justify-between text-sm"><span class="opacity-60">Abrir análise</span><i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i></div>
+        </a>
+
+        <a href="ise.html" class="bg-white dark:bg-darkcard rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-chumbo/5 dark:border-white/5 hover:-translate-y-1 transition-all duration-300 group">
+          <div class="flex justify-between items-start mb-6"><div class="p-3 bg-gelo dark:bg-white/5 rounded-xl"><i data-lucide="leaf" class="w-6 h-6 text-laranja"></i></div><span class="text-xs font-bold uppercase tracking-wider bg-chumbo dark:bg-gelo text-white dark:text-chumbo px-3 py-1 rounded-full">Página ISE</span></div>
+          <h4 class="text-xl font-bold mb-2">Índice de Sustentabilidade Empresarial</h4>
+          <p class="text-sm opacity-60 mb-6">Estrutura pronta para explicar o índice, metodologia, critérios ESG e inserir resultados do modelo ISE.</p>
+          <div class="flex items-end gap-3"><span class="text-5xl font-geist-mono font-bold text-chumbo dark:text-gelo">ESG</span><span class="text-sm font-medium opacity-60 mb-2">Governança</span></div>
+          <div class="mt-8 pt-6 border-t border-gelo dark:border-white/10 flex items-center justify-between text-sm"><span class="opacity-60">Abrir página</span><i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i></div>
+        </a>
+
+        <div class="bg-white dark:bg-darkcard rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-chumbo/5 dark:border-white/5 lg:col-span-1 flex flex-col justify-between hover:-translate-y-1 transition-all duration-300">
+          <div><div class="flex justify-between items-start mb-2"><h4 class="text-xl font-bold">Performance Histórica</h4><i data-lucide="shield-check" class="w-5 h-5 text-laranja"></i></div><p class="text-sm opacity-60 mb-5">Resumo da base ICO2: 04/01/2021 a 30/12/2025</p></div>
+          <canvas id="home-performance-chart" class="native-chart-mini mb-5" role="img" aria-label="Mini gráfico nativo da performance histórica do ICO2"></canvas>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="rounded-xl bg-gelo dark:bg-white/5 p-4"><p class="text-xs opacity-50 mb-2">Observações</p><strong class="font-geist-mono text-2xl">1242</strong></div>
+            <div class="rounded-xl bg-gelo dark:bg-white/5 p-4"><p class="text-xs opacity-50 mb-2">Correlação</p><strong class="font-geist-mono text-2xl text-laranja">0,9663</strong></div>
+          </div>
+          <div class="flex justify-between items-center mt-6 text-xs font-geist-mono"><div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-laranja"></div><span>Projeto Finor</span></div><div class="flex items-center gap-2 opacity-50"><div class="w-2 h-2 rounded-full bg-chumbo dark:bg-gelo"></div><span>Base ICO2</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="equipe" class="p-6 md:p-12 lg:p-20 max-w-7xl mx-auto border-t border-chumbo/5 dark:border-white/5">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
+        <div><span class="text-laranja font-geist-mono text-sm uppercase tracking-[0.25em]">Equipe</span><h3 class="text-3xl md:text-5xl font-bold mt-3">Conheça a Equipe</h3></div>
+        <p class="max-w-xl opacity-70 text-left md:text-right">Cards editáveis para inserir foto, nome, curso e LinkedIn. Para trocar a foto, salve o arquivo na pasta <span class="font-geist-mono text-laranja">assets/team</span> com o nome indicado no card.</p>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+        <article class="group bg-white dark:bg-darkcard rounded-3xl p-5 border border-chumbo/5 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:-translate-y-1 transition-all duration-300 text-left">
+          <div class="aspect-[4/3] rounded-2xl bg-gelo dark:bg-white/5 overflow-hidden mb-5 flex items-center justify-center border border-chumbo/5 dark:border-white/10">
+            <img src="assets/team/brayan.jpg" alt="Foto de Brayan" class="w-full h-full object-cover hidden" onload="this.classList.remove('hidden'); this.nextElementSibling.classList.add('hidden')">
+            <div class="w-20 h-20 rounded-full bg-laranja text-white flex items-center justify-center text-3xl font-bold font-geist-mono">B</div>
+          </div>
+          <h4 class="text-xl font-bold">Brayan</h4>
+          <p class="mt-1 text-sm opacity-60">Curso da equipe</p>
+          <a href="https://www.linkedin.com/in/seu-linkedin/" target="_blank" rel="noopener" class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-laranja hover:gap-3 transition-all">
+            LinkedIn <i data-lucide="external-link" class="w-4 h-4"></i>
+          </a>
+        </article>
+
+        <article class="group bg-white dark:bg-darkcard rounded-3xl p-5 border border-chumbo/5 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:-translate-y-1 transition-all duration-300 text-left">
+          <div class="aspect-[4/3] rounded-2xl bg-gelo dark:bg-white/5 overflow-hidden mb-5 flex items-center justify-center border border-chumbo/5 dark:border-white/10">
+            <img src="assets/team/gabriel.jpg" alt="Foto de Gabriel" class="w-full h-full object-cover hidden" onload="this.classList.remove('hidden'); this.nextElementSibling.classList.add('hidden')">
+            <div class="w-20 h-20 rounded-full bg-laranja text-white flex items-center justify-center text-3xl font-bold font-geist-mono">G</div>
+          </div>
+          <h4 class="text-xl font-bold">Gabriel</h4>
+          <p class="mt-1 text-sm opacity-60">Curso da equipe</p>
+          <a href="https://www.linkedin.com/in/seu-linkedin/" target="_blank" rel="noopener" class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-laranja hover:gap-3 transition-all">
+            LinkedIn <i data-lucide="external-link" class="w-4 h-4"></i>
+          </a>
+        </article>
+
+        <article class="group bg-white dark:bg-darkcard rounded-3xl p-5 border border-chumbo/5 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:-translate-y-1 transition-all duration-300 text-left">
+          <div class="aspect-[4/3] rounded-2xl bg-gelo dark:bg-white/5 overflow-hidden mb-5 flex items-center justify-center border border-chumbo/5 dark:border-white/10">
+            <img src="assets/team/guilherme.jpg" alt="Foto de Guilherme" class="w-full h-full object-cover hidden" onload="this.classList.remove('hidden'); this.nextElementSibling.classList.add('hidden')">
+            <div class="w-20 h-20 rounded-full bg-laranja text-white flex items-center justify-center text-3xl font-bold font-geist-mono">G</div>
+          </div>
+          <h4 class="text-xl font-bold">Guilherme</h4>
+          <p class="mt-1 text-sm opacity-60">Curso da equipe</p>
+          <a href="https://www.linkedin.com/in/seu-linkedin/" target="_blank" rel="noopener" class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-laranja hover:gap-3 transition-all">
+            LinkedIn <i data-lucide="external-link" class="w-4 h-4"></i>
+          </a>
+        </article>
+
+        <article class="group bg-white dark:bg-darkcard rounded-3xl p-5 border border-chumbo/5 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:-translate-y-1 transition-all duration-300 text-left">
+          <div class="aspect-[4/3] rounded-2xl bg-gelo dark:bg-white/5 overflow-hidden mb-5 flex items-center justify-center border border-chumbo/5 dark:border-white/10">
+            <img src="assets/team/henrique.jpg" alt="Foto de Henrique" class="w-full h-full object-cover hidden" onload="this.classList.remove('hidden'); this.nextElementSibling.classList.add('hidden')">
+            <div class="w-20 h-20 rounded-full bg-laranja text-white flex items-center justify-center text-3xl font-bold font-geist-mono">H</div>
+          </div>
+          <h4 class="text-xl font-bold">Henrique</h4>
+          <p class="mt-1 text-sm opacity-60">Curso da equipe</p>
+          <a href="https://www.linkedin.com/in/seu-linkedin/" target="_blank" rel="noopener" class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-laranja hover:gap-3 transition-all">
+            LinkedIn <i data-lucide="external-link" class="w-4 h-4"></i>
+          </a>
+        </article>
+
+        <article class="group bg-white dark:bg-darkcard rounded-3xl p-5 border border-chumbo/5 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:-translate-y-1 transition-all duration-300 text-left">
+          <div class="aspect-[4/3] rounded-2xl bg-gelo dark:bg-white/5 overflow-hidden mb-5 flex items-center justify-center border border-chumbo/5 dark:border-white/10">
+            <img src="assets/team/melania.jpg" alt="Foto de Melania" class="w-full h-full object-cover hidden" onload="this.classList.remove('hidden'); this.nextElementSibling.classList.add('hidden')">
+            <div class="w-20 h-20 rounded-full bg-laranja text-white flex items-center justify-center text-3xl font-bold font-geist-mono">M</div>
+          </div>
+          <h4 class="text-xl font-bold">Melania</h4>
+          <p class="mt-1 text-sm opacity-60">Curso da equipe</p>
+          <a href="https://www.linkedin.com/in/seu-linkedin/" target="_blank" rel="noopener" class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-laranja hover:gap-3 transition-all">
+            LinkedIn <i data-lucide="external-link" class="w-4 h-4"></i>
+          </a>
+        </article></div>
+    </section>
+  </main>
+
+  <script src="assets/js/finor-data.js"></script>
+  <script src="assets/js/native-charts.js"></script>
+  <script>
+    if (window.lucide) lucide.createIcons();
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    if (themeToggleBtn) themeToggleBtn.addEventListener('click', () => { document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); setTimeout(drawHomeChart, 40); });
+    const blob = document.getElementById('mouse-blob');
+    if (blob) document.body.onpointermove = event => { blob.animate({ left: `${event.clientX}px`, top: `${event.clientY}px` }, { duration: 3000, fill: 'forwards' }); };
+    const qMark = document.getElementById('question-mark'); const dotMark = document.getElementById('dot-mark'); const typedTextContainer = document.getElementById('typed-text'); const cursor = document.getElementById('cursor'); const ctaContainer = document.getElementById('cta-container');
+    const fullText = 'e esse é o nosso projeto.'; let animationStarted = false;
+    let homePredicoes = [];
+    function loadHomeChart() {
+      try {
+        homePredicoes = (window.FINOR_ICO2_DATA && window.FINOR_ICO2_DATA.predicoes) ? window.FINOR_ICO2_DATA.predicoes : [];
+        if (!homePredicoes.length) throw new Error('Base ICO2 ausente no pacote local.');
+        drawHomeChart();
+      } catch (error) {
+        const canvas = document.getElementById('home-performance-chart');
+        if (canvas && window.FinorCharts) FinorCharts.message(canvas, 'Dados indisponíveis.');
+      }
+    }
+    function drawHomeChart() {
+      const canvas = document.getElementById('home-performance-chart');
+      if (!canvas || !window.FinorCharts || !homePredicoes.length) return;
+      const colors = FinorCharts.palette();
+      const cumulativo = FinorCharts.cumulativeReturns(homePredicoes);
+      FinorCharts.lineChart(canvas, cumulativo, { percent: true, limit: 260, series: [
+        { key: 'observado', label: 'Observado', color: colors.primary, width: 2.4 },
+        { key: 'previsto', label: 'Previsto', color: colors.secondary, width: 1.8, alpha: 0.68 }
+      ] });
+    }
+    let homeResizeTimer;
+    window.addEventListener('resize', () => { clearTimeout(homeResizeTimer); homeResizeTimer = setTimeout(drawHomeChart, 160); });
+    function startHeroAnimation() { if (animationStarted) return; animationStarted = true; setTimeout(() => { qMark.classList.remove('opacity-100','scale-100'); qMark.classList.add('opacity-0','scale-50','w-0'); dotMark.classList.remove('hidden-force'); setTimeout(() => { dotMark.classList.remove('opacity-0','scale-50'); dotMark.classList.add('opacity-100','scale-100'); },50); },2500); setTimeout(() => { cursor.classList.remove('hidden-force'); let i=0; const typeInterval=setInterval(() => { typedTextContainer.textContent=fullText.substring(0,i+1); i++; if(i===fullText.length) { clearInterval(typeInterval); setTimeout(() => { ctaContainer.classList.remove('opacity-0','translate-y-8','pointer-events-none'); ctaContainer.classList.add('opacity-100','translate-y-0'); ctaContainer.style.pointerEvents='auto'; },500); } },70); },3100); }
+    window.onload = () => { startHeroAnimation(); loadHomeChart(); };
+  </script>
+
+  <script>
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.18, rootMargin: '0px 0px -8% 0px' });
+
+    document.querySelectorAll('[data-reveal-group], .brand-reveal, .fade-reveal').forEach((el) => revealObserver.observe(el));
+  </script>
+
 </body>
 </html>
