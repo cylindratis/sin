@@ -15,45 +15,52 @@
     .font-geist { font-family: 'Geist', sans-serif; }
     .font-geist-mono { font-family: 'Geist Mono', monospace; }
     html { scroll-behavior: smooth; }
-    .hidden-force { display: none !important; }
+    .hidden-force { display:none!important; }
     .typing-cursor { display:inline-block; width:4px; height:1em; background-color:#ff5a19; animation:blink 1s step-end infinite; vertical-align:text-bottom; margin-left:4px; }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-    #mouse-blob { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); }
-    .glass-card { backdrop-filter: blur(18px); }
-
-    .theme-floating { top: 22px; right: 1rem; }
-    body > header { right: 5.25rem !important; padding-right: 0 !important; }
-    @media (min-width: 768px) {
-      .theme-floating { top: 22px; right: 3rem; }
-      body > header { right: 7.25rem !important; padding-right: 0 !important; }
-    }
-    @media (max-width: 767px) {
-      body > header { right: 4.75rem !important; padding-left: 1rem !important; }
-    }
-    .native-chart { width: 100%; height: 360px; display: block; }
-    .native-chart-sm { width: 100%; height: 320px; display: block; }
-    .native-chart-lg { width: 100%; height: 680px; display: block; }
-    .chart-card { min-width: 0; }
+    #mouse-blob { position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); }
+    .glass-card { backdrop-filter:blur(18px); }
+    .theme-floating { top:22px; right:1rem; }
+    body > header { right:5.25rem!important; padding-right:0!important; }
+    @media (min-width:768px){ .theme-floating{top:22px;right:3rem;} body>header{right:7.25rem!important;padding-right:0!important;} }
+    @media (max-width:767px){ body>header{right:4.75rem!important;padding-left:1rem!important;} }
+    .native-chart { width:100%; height:380px; display:block; }
+    .native-chart-lg { width:100%; height:520px; display:block; }
+    .native-chart-mini { width:100%; height:180px; display:block; }
+    .chart-card { min-width:0; }
+    .brand-reveal { overflow:hidden; display:block; }
+    .brand-reveal > span { display:block; transform:translateY(115%); opacity:0; transition:transform 900ms cubic-bezier(.16,1,.3,1), opacity 900ms cubic-bezier(.16,1,.3,1); transition-delay:var(--delay,0ms); }
+    .brand-reveal.is-visible > span, .reveal-group.is-visible .brand-reveal > span { transform:translateY(0); opacity:1; }
+    .fade-reveal { opacity:0; transform:translateY(28px); transition:opacity 900ms cubic-bezier(.16,1,.3,1), transform 900ms cubic-bezier(.16,1,.3,1); transition-delay:var(--delay,0ms); }
+    .fade-reveal.is-visible, .reveal-group.is-visible .fade-reveal { opacity:1; transform:translateY(0); }
+    .thesis-line { border-top:1px solid rgba(33,33,33,.12); }
+    .dark .thesis-line { border-top-color:rgba(241,238,238,.14); }
+    .brand-icon { color:#ff5a19; border:1px solid rgba(255,90,25,.45); background:rgba(255,90,25,.08); }
+    .dark .brand-icon { background:rgba(255,90,25,.12); }
+    .period-btn.active, .chip-toggle input:checked + span { background:#ff5a19; color:#fff; border-color:#ff5a19; }
+    .treemap { position:relative; height:520px; overflow:hidden; }
+    .tree-node { position:absolute; box-sizing:border-box; border:2px solid rgba(241,238,238,.8); overflow:hidden; padding:8px; display:flex; flex-direction:column; justify-content:space-between; background:rgba(255,90,25,.2); min-width:0; min-height:0; } .tree-node strong, .tree-node span { line-height:1.05; }
+    .dark .tree-node { border-color:rgba(18,18,18,.88); }
+    .table-scroll { max-height:480px; overflow:auto; }
+    @media (prefers-reduced-motion: reduce){ .brand-reveal>span,.fade-reveal{transition:none;transform:none;opacity:1;} }
   </style>
   <script>
     if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
     else document.documentElement.classList.remove('dark');
   </script>
-  <title>Projeto Finor | Página ICO2</title>
+  <title>Projeto Finor | ICO2</title>
 </head>
-<body class="bg-gelo text-chumbo dark:bg-darkbg dark:text-gelo font-geist selection:bg-laranja selection:text-white relative transition-colors duration-500">
+<body data-index="ICO2" class="bg-gelo text-chumbo dark:bg-darkbg dark:text-gelo font-geist selection:bg-laranja selection:text-white relative transition-colors duration-500">
   <button id="theme-toggle" aria-label="Alternar tema" class="theme-floating fixed z-50 p-3 rounded-full bg-white dark:bg-darkcard shadow-lg border border-chumbo/5 dark:border-white/10 hover:scale-110 transition-transform cursor-pointer">
-    <i data-lucide="sun" class="w-5 h-5 text-laranja dark:hidden"></i>
-    <i data-lucide="moon" class="w-5 h-5 text-laranja hidden dark:block"></i>
+    <i data-lucide="sun" class="w-5 h-5 text-laranja dark:hidden"></i><i data-lucide="moon" class="w-5 h-5 text-laranja hidden dark:block"></i>
   </button>
-  <div class="fixed inset-0 w-full h-full overflow-hidden pointer-events-none z-0 opacity-20 dark:opacity-10">
-    <div id="mouse-blob" class="w-[50vw] h-[50vw] max-w-[600px] max-h-[600px] rounded-full bg-laranja blur-[120px] mix-blend-multiply dark:mix-blend-screen"></div>
-  </div>
+  <div class="fixed inset-0 w-full h-full overflow-hidden pointer-events-none z-0 opacity-20 dark:opacity-10"><div id="mouse-blob" class="w-[50vw] h-[50vw] max-w-[600px] max-h-[600px] rounded-full bg-laranja blur-[120px] mix-blend-multiply dark:mix-blend-screen"></div></div>
   <header class="fixed top-0 left-0 right-0 z-40 px-6 md:px-12 py-5">
     <nav class="max-w-7xl mx-auto flex items-center justify-between rounded-full bg-gelo/70 dark:bg-darkbg/70 glass-card border border-chumbo/5 dark:border-white/10 px-5 py-3 shadow-sm">
       <a href="index.html#hero" class="flex items-center gap-2 font-bold tracking-tight"><span class="w-3 h-3 rounded-full bg-laranja inline-block"></span> FINOR</a>
       <div class="hidden md:flex items-center gap-6 text-sm font-medium opacity-80">
-        <a class="hover:text-laranja transition-colors" href="index.html#resultados">Resultados</a>
+        <a class="hover:text-laranja transition-colors" href="index.html#rentabilidade">Rentabilidade</a>
+        <a class="hover:text-laranja transition-colors" href="index.html#sobre">Sobre</a>
         <a class="hover:text-laranja transition-colors" href="ico2.html">ICO2</a>
         <a class="hover:text-laranja transition-colors" href="ise.html">ISE</a>
         <a class="hover:text-laranja transition-colors" href="index.html#equipe">Equipe</a>
@@ -62,194 +69,81 @@
   </header>
   <main class="relative z-10 pt-28">
     <section class="p-6 md:p-12 lg:p-20 max-w-7xl mx-auto">
-      <div class="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-12 items-center">
+      <div class="grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-12 items-center">
         <div>
-          <a href="index.html#resultados" class="inline-flex items-center gap-2 text-sm opacity-70 hover:text-laranja hover:opacity-100 mb-8"><i data-lucide="arrow-left" class="w-4 h-4"></i> voltar para início</a>
+          <a href="index.html#rentabilidade" class="inline-flex items-center gap-2 text-sm opacity-70 hover:text-laranja hover:opacity-100 mb-8"><i data-lucide="arrow-left" class="w-4 h-4"></i> voltar para rentabilidade</a>
           <span class="text-laranja font-geist-mono text-sm uppercase tracking-[0.25em]">Modelo ICO2</span>
           <h1 class="mt-4 text-5xl md:text-7xl font-bold tracking-tight leading-[1.05]">Índice Carbono Eficiente</h1>
-          <p class="mt-6 text-xl opacity-75 leading-relaxed">Página técnica do projeto Finor para apresentar o estudo do ICO2 com gráficos nativos renderizados no navegador, sem imagens estáticas de gráfico.</p>
-          <div class="mt-8 flex flex-wrap gap-3">
-            <span class="px-4 py-2 rounded-full bg-white dark:bg-darkcard border border-chumbo/5 dark:border-white/10 text-sm font-medium">Período: 04/01/2021 a 30/12/2025</span>
-            <span class="px-4 py-2 rounded-full bg-white dark:bg-darkcard border border-chumbo/5 dark:border-white/10 text-sm font-medium">1242 observações</span>
-            <span class="px-4 py-2 rounded-full bg-white dark:bg-darkcard border border-chumbo/5 dark:border-white/10 text-sm font-medium">Canvas + JavaScript puro</span>
-          </div>
+          <p class="mt-6 text-xl opacity-75 leading-relaxed">Escolha entre três carteiras de destaque: maior retorno total, menor tracking-error e maior correlação com o IBOV. Acompanhe pesos, indústria Yahoo, retorno histórico, presença dos ativos e métricas técnicas.</p>
         </div>
         <div class="bg-white dark:bg-darkcard rounded-[2rem] p-8 border border-chumbo/5 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-          <p class="text-sm opacity-60 mb-6">Resumo do ajuste estatístico</p>
-          <div class="grid grid-cols-2 gap-4">
-            <div class="rounded-2xl bg-gelo dark:bg-white/5 p-5"><p class="text-xs uppercase tracking-widest opacity-50">R² múltiplo</p><strong class="block mt-3 text-4xl font-geist-mono text-laranja">0,9338</strong></div>
-            <div class="rounded-2xl bg-gelo dark:bg-white/5 p-5"><p class="text-xs uppercase tracking-widest opacity-50">R² ajustado</p><strong class="block mt-3 text-4xl font-geist-mono">0,9321</strong></div>
-            <div class="rounded-2xl bg-gelo dark:bg-white/5 p-5"><p class="text-xs uppercase tracking-widest opacity-50">RMSE</p><strong class="block mt-3 text-3xl font-geist-mono">0,0029</strong></div>
-            <div class="rounded-2xl bg-gelo dark:bg-white/5 p-5"><p class="text-xs uppercase tracking-widest opacity-50">Correlação</p><strong class="block mt-3 text-3xl font-geist-mono text-laranja">0,9663</strong></div>
-          </div>
+          <div class="flex items-center justify-between mb-6"><p class="text-sm opacity-60">Resumo da carteira selecionada</p><span id="hero-k-pill" class="font-geist-mono text-xs bg-laranja text-white px-3 py-1 rounded-full">k=--</span></div>
+          <div id="hero-metric-cards" class="grid grid-cols-2 gap-4"></div>
         </div>
       </div>
     </section>
 
-    <section class="p-6 md:p-12 lg:p-20 max-w-7xl mx-auto">
-      <h2 class="text-3xl md:text-5xl font-bold mb-8">Indicadores principais</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <div class="bg-white dark:bg-darkcard rounded-3xl p-6 border border-chumbo/5 dark:border-white/10"><i data-lucide="line-chart" class="w-6 h-6 text-laranja mb-5"></i><p class="text-sm opacity-60">Retorno acumulado observado</p><strong class="block mt-2 text-4xl font-geist-mono">+37,0%</strong><p class="mt-3 text-xs opacity-50">Previsto: +37,7%</p></div>
-        <div class="bg-white dark:bg-darkcard rounded-3xl p-6 border border-chumbo/5 dark:border-white/10"><i data-lucide="activity" class="w-6 h-6 text-laranja mb-5"></i><p class="text-sm opacity-60">Volatilidade anualizada observada</p><strong class="block mt-2 text-4xl font-geist-mono">+17,8%</strong><p class="mt-3 text-xs opacity-50">Prevista: +17,2%</p></div>
-        <div class="bg-white dark:bg-darkcard rounded-3xl p-6 border border-chumbo/5 dark:border-white/10"><i data-lucide="trending-down" class="w-6 h-6 text-laranja mb-5"></i><p class="text-sm opacity-60">Máximo drawdown observado</p><strong class="block mt-2 text-4xl font-geist-mono">-25,6%</strong><p class="mt-3 text-xs opacity-50">Previsto: -20,9%</p></div>
-      </div>
-    </section>
-
-    <section class="p-6 md:p-12 lg:p-20 max-w-7xl mx-auto">
-      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
-        <div><span class="text-laranja font-geist-mono text-sm uppercase tracking-[0.25em]">Gráficos nativos</span><h2 class="text-3xl md:text-5xl font-bold mt-3">Observado vs Previsto</h2></div>
-        <p class="max-w-xl opacity-70">Os gráficos abaixo são desenhados diretamente no navegador a partir dos arquivos JSON do projeto, substituindo as imagens exportadas do R.</p>
-      </div>
-      <div class="grid grid-cols-1 gap-6">
+    <section class="p-6 md:p-12 lg:p-20 max-w-7xl mx-auto border-t border-chumbo/5 dark:border-white/5">
+      <div class="grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-6 items-start">
+        <aside class="bg-white dark:bg-darkcard rounded-3xl p-6 border border-chumbo/5 dark:border-white/10 xl:sticky xl:top-32">
+          <label for="k-select" class="block text-xs uppercase tracking-[0.25em] text-laranja mb-3">Selecionar critério</label>
+          <select id="k-select" class="w-full rounded-2xl bg-gelo dark:bg-white/5 border border-chumbo/5 dark:border-white/10 p-4 font-geist-mono text-xl outline-none"></select>
+          <div class="mt-6 grid grid-cols-2 gap-3" id="side-stat-cards"></div>
+          <div class="mt-6 pt-6 border-t border-chumbo/10 dark:border-white/10"><p class="text-xs uppercase tracking-widest opacity-50 mb-3">Toggles do gráfico</p><div id="series-toggles" class="flex flex-wrap gap-2"></div></div>
+        </aside>
         <figure class="chart-card bg-white dark:bg-darkcard rounded-3xl p-4 md:p-6 border border-chumbo/5 dark:border-white/10">
-          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4"><h3 class="text-xl font-bold">Retorno acumulado — série completa</h3><span class="font-geist-mono text-xs opacity-50">2021–2025</span></div>
-          <canvas id="chart-completo" class="native-chart" role="img" aria-label="Gráfico nativo de retorno acumulado observado e previsto"></canvas>
-          <figcaption class="mt-4 text-sm opacity-60">Série completa: retorno acumulado observado comparado ao retorno acumulado previsto.</figcaption>
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4"><h2 class="text-2xl font-bold">Retorno acumulado da carteira</h2><span class="font-geist-mono text-xs opacity-50">mensal • 2021–2025</span></div>
+          <canvas id="portfolio-return-chart" class="native-chart-lg" role="img" aria-label="Retorno acumulado da carteira selecionada"></canvas>
         </figure>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <figure class="chart-card bg-white dark:bg-darkcard rounded-3xl p-4 md:p-6 border border-chumbo/5 dark:border-white/10">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4"><h3 class="text-xl font-bold">Amostra recente</h3><span class="font-geist-mono text-xs opacity-50">últimos 252 pregões</span></div>
-            <canvas id="chart-teste" class="native-chart-sm" role="img" aria-label="Gráfico nativo da amostra recente observado e previsto"></canvas>
-            <figcaption class="mt-4 text-sm opacity-60">Comparação visual do ajuste em período recente, com retorno acumulado reiniciado na amostra.</figcaption>
-          </figure>
-          <figure class="chart-card bg-white dark:bg-darkcard rounded-3xl p-4 md:p-6 border border-chumbo/5 dark:border-white/10">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4"><h3 class="text-xl font-bold">Dispersão observado × previsto</h3><span class="font-geist-mono text-xs opacity-50">retornos diários</span></div>
-            <canvas id="chart-scatter" class="native-chart-sm" role="img" aria-label="Gráfico nativo de dispersão observado versus previsto"></canvas>
-            <figcaption class="mt-4 text-sm opacity-60">Quanto mais próximos da diagonal, maior a aderência entre valores observados e previstos.</figcaption>
-          </figure>
-        </div>
       </div>
     </section>
 
-    <section class="p-6 md:p-12 lg:p-20 max-w-7xl mx-auto">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <section class="p-6 md:p-12 lg:p-20 max-w-7xl mx-auto border-t border-chumbo/5 dark:border-white/5">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8"><div><span class="text-laranja font-geist-mono text-sm uppercase tracking-[0.25em]">Composição</span><h2 class="text-3xl md:text-5xl font-bold mt-3">Ativos, pesos e indústria Yahoo</h2></div><p class="max-w-xl opacity-70 md:text-right">O mapa de árvore mostra o tamanho de cada ativo pelo peso na carteira. A tabela detalha o percentual e a indústria Yahoo.</p></div>
+      <div class="grid grid-cols-1 xl:grid-cols-[1fr_430px] gap-6">
+        <div class="bg-white dark:bg-darkcard rounded-3xl p-4 md:p-6 border border-chumbo/5 dark:border-white/10"><div id="portfolio-treemap" class="treemap rounded-2xl bg-gelo dark:bg-white/5"></div></div>
+        <div class="bg-white dark:bg-darkcard rounded-3xl p-6 border border-chumbo/5 dark:border-white/10"><h3 class="text-xl font-bold mb-4">Pesos da carteira</h3><div class="table-scroll"><table class="w-full text-sm"><thead class="text-left opacity-50 font-geist-mono"><tr><th class="py-2">Ativo</th><th class="py-2">Indústria Yahoo</th><th class="py-2 text-right">Peso</th></tr></thead><tbody id="weights-table"></tbody></table></div></div>
+      </div>
+    </section>
+
+    <section class="p-6 md:p-12 lg:p-20 max-w-7xl mx-auto border-t border-chumbo/5 dark:border-white/5">
+      <div class="grid grid-cols-1 xl:grid-cols-[420px_1fr] gap-6 items-start">
+        <div class="bg-white dark:bg-darkcard rounded-3xl p-6 border border-chumbo/5 dark:border-white/10"><span class="text-laranja font-geist-mono text-sm uppercase tracking-[0.25em]">Presença</span><h2 class="text-3xl font-bold mt-3 mb-5">Ativos mais recorrentes</h2><div id="presence-list" class="space-y-3"></div></div>
+        <figure class="chart-card bg-white dark:bg-darkcard rounded-3xl p-4 md:p-6 border border-chumbo/5 dark:border-white/10"><h3 class="text-xl font-bold mb-4">Peso médio por ativo nas carteiras k=5 a k=20</h3><canvas id="presence-chart" class="native-chart" role="img" aria-label="Ativos com maior presença e peso médio"></canvas></figure>
+      </div>
+    </section>
+
+    <section class="p-6 md:p-12 lg:p-20 max-w-7xl mx-auto border-t border-chumbo/5 dark:border-white/5">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8"><div><span class="text-laranja font-geist-mono text-sm uppercase tracking-[0.25em]">Métricas técnicas</span><h2 class="text-3xl md:text-5xl font-bold mt-3">Tracking-error, volatilidade e correlação</h2></div><p class="max-w-xl opacity-70 md:text-right">Indicadores das três carteiras de destaque, permitindo comparar retorno, risco e aderência ao IBOV.</p></div>
+      <div id="technical-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"></div>
+      <div class="bg-white dark:bg-darkcard rounded-3xl p-6 border border-chumbo/5 dark:border-white/10 overflow-auto"><table class="w-full text-sm"><thead class="text-left opacity-50 font-geist-mono"><tr><th class="py-2">Critério</th><th class="py-2 text-right">Retorno total</th><th class="py-2 text-right">Retorno anual</th><th class="py-2 text-right">Tracking-error anual</th><th class="py-2 text-right">Volatilidade anual</th><th class="py-2 text-right">Sharpe</th><th class="py-2 text-right">Corr. IBOV</th></tr></thead><tbody id="metrics-table"></tbody></table></div>
+      <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
         <figure class="chart-card bg-white dark:bg-darkcard rounded-3xl p-4 md:p-6 border border-chumbo/5 dark:border-white/10">
-          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4"><h3 class="text-xl font-bold">Mapa de correlação</h3><span class="font-geist-mono text-xs opacity-50">matriz da base final</span></div>
-          <canvas id="chart-heatmap" class="native-chart-lg" role="img" aria-label="Heatmap nativo da matriz de correlação"></canvas>
-          <figcaption class="mt-4 text-sm opacity-60">Mapa de correlação construído a partir da planilha da base final.</figcaption>
+          <h3 class="text-xl font-bold mb-4">Dispersão observado × previsto</h3>
+          <canvas id="diagnostic-scatter" class="native-chart" role="img" aria-label="Dispersão observado versus previsto"></canvas>
         </figure>
-        <div class="grid grid-cols-1 gap-6">
-          <figure class="chart-card bg-white dark:bg-darkcard rounded-3xl p-4 md:p-6 border border-chumbo/5 dark:border-white/10">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4"><h3 class="text-xl font-bold">Resíduos × ajustados</h3><span class="font-geist-mono text-xs opacity-50">diagnóstico</span></div>
-            <canvas id="chart-residuos" class="native-chart-sm" role="img" aria-label="Gráfico nativo de resíduos versus valores ajustados"></canvas>
-            <figcaption class="mt-4 text-sm opacity-60">Ajuda a visualizar dispersão, outliers e possível heterocedasticidade.</figcaption>
-          </figure>
-          <figure class="chart-card bg-white dark:bg-darkcard rounded-3xl p-4 md:p-6 border border-chumbo/5 dark:border-white/10">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4"><h3 class="text-xl font-bold">Q-Q plot dos resíduos</h3><span class="font-geist-mono text-xs opacity-50">normalidade</span></div>
-            <canvas id="chart-qq" class="native-chart-sm" role="img" aria-label="Gráfico Q-Q plot nativo dos resíduos"></canvas>
-            <figcaption class="mt-4 text-sm opacity-60">Comparação entre quantis teóricos e quantis da amostra.</figcaption>
-          </figure>
-        </div>
+        <figure class="chart-card bg-white dark:bg-darkcard rounded-3xl p-4 md:p-6 border border-chumbo/5 dark:border-white/10">
+          <h3 class="text-xl font-bold mb-4">Mapa de correlação</h3>
+          <canvas id="diagnostic-heatmap" class="native-chart-lg" role="img" aria-label="Mapa de correlação dos ativos"></canvas>
+        </figure>
+        <figure class="chart-card bg-white dark:bg-darkcard rounded-3xl p-4 md:p-6 border border-chumbo/5 dark:border-white/10">
+          <h3 class="text-xl font-bold mb-4">Resíduos × ajustados</h3>
+          <canvas id="diagnostic-residuals" class="native-chart" role="img" aria-label="Resíduos versus valores ajustados"></canvas>
+        </figure>
+        <figure class="chart-card bg-white dark:bg-darkcard rounded-3xl p-4 md:p-6 border border-chumbo/5 dark:border-white/10">
+          <h3 class="text-xl font-bold mb-4">Q-Q plot dos resíduos</h3>
+          <canvas id="diagnostic-qq" class="native-chart" role="img" aria-label="Q-Q plot dos resíduos"></canvas>
+        </figure>
       </div>
     </section>
 
-    <section class="p-6 md:p-12 lg:p-20 max-w-7xl mx-auto">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white dark:bg-darkcard rounded-3xl p-6 border border-chumbo/5 dark:border-white/10">
-          <h3 class="text-2xl font-bold mb-2">Maiores pesos do modelo</h3><p class="text-sm opacity-60 mb-6">Coeficientes com maior magnitude estimada.</p>
-          <canvas id="chart-coeficientes" class="native-chart-sm mb-6" role="img" aria-label="Gráfico nativo de barras dos maiores coeficientes"></canvas>
-          <table class="w-full text-sm"><thead><tr class="text-left opacity-50"><th class="pb-3">Ativo</th><th class="pb-3 text-right">Coef.</th><th class="pb-3 text-right">Sig.</th></tr></thead><tbody id="coef-table"></tbody></table>
-        </div>
-        <div class="bg-white dark:bg-darkcard rounded-3xl p-6 border border-chumbo/5 dark:border-white/10">
-          <h3 class="text-2xl font-bold mb-2">Multicolinearidade — VIF</h3><p class="text-sm opacity-60 mb-6">Maior VIF: 2,90 em ALOS3.SA. Média: 1,84.</p>
-          <canvas id="chart-vif" class="native-chart-sm mb-6" role="img" aria-label="Gráfico nativo de barras dos maiores VIF"></canvas>
-          <table class="w-full text-sm"><thead><tr class="text-left opacity-50"><th class="pb-3">Ativo</th><th class="pb-3 text-right">VIF</th></tr></thead><tbody id="vif-table"></tbody></table>
-        </div>
+    <section class="p-6 md:p-12 lg:p-20 max-w-7xl mx-auto border-t border-chumbo/5 dark:border-white/5">
+      <div class="grid grid-cols-1 lg:grid-cols-[0.85fr_1.15fr] gap-6 items-start">
+        <div><span class="text-laranja font-geist-mono text-sm uppercase tracking-[0.25em]">Modelo estatístico</span><h2 class="text-3xl md:text-5xl font-bold mt-3">Resumo técnico ICO2</h2><p class="mt-4 opacity-70 leading-relaxed">Bloco de diagnóstico do modelo com dados extraídos dos arquivos JSON e TXT do projeto.</p></div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="model-summary-cards"></div>
       </div>
     </section>
   </main>
-  <script src="assets/js/finor-data.js"></script>
-  <script src="assets/js/native-charts.js"></script>
-  <script>
-    if (window.lucide) lucide.createIcons();
-
-    const blob = document.getElementById('mouse-blob');
-    if (blob) document.body.onpointermove = event => { blob.animate({ left: `${event.clientX}px`, top: `${event.clientY}px` }, { duration: 3000, fill: 'forwards' }); };
-
-    const state = { predicoes: [], diagnosticos: [], qq: [], vif: [], corr: null, coef: [] };
-    const chartIds = ['chart-completo','chart-teste','chart-scatter','chart-heatmap','chart-residuos','chart-qq','chart-coeficientes','chart-vif'];
-
-
-    function carregarTabelas() {
-      const coefTable = document.getElementById('coef-table');
-      const vifTable = document.getElementById('vif-table');
-      if (coefTable) {
-        const topCoef = [...state.coef].sort((a,b) => Math.abs(b.coeficiente) - Math.abs(a.coeficiente)).slice(0,8);
-        coefTable.innerHTML = topCoef.map(item => `<tr class="border-b border-chumbo/5 dark:border-white/10"><td class="py-3 font-geist-mono text-sm">${item.ativo}</td><td class="py-3 text-right font-geist-mono">${Number(item.coeficiente).toFixed(4)}</td><td class="py-3 text-right text-laranja font-geist-mono">${item.sig || ''}</td></tr>`).join('');
-      }
-      if (vifTable) {
-        const topVif = [...state.vif].sort((a,b) => b.vif - a.vif).slice(0,8);
-        vifTable.innerHTML = topVif.map(item => `<tr class="border-b border-chumbo/5 dark:border-white/10"><td class="py-3 font-geist-mono text-sm">${item.ativo}</td><td class="py-3 text-right font-geist-mono">${Number(item.vif).toFixed(2)}</td></tr>`).join('');
-      }
-    }
-
-    function drawAllCharts() {
-      if (!window.FinorCharts || !state.predicoes.length) return;
-      const colors = FinorCharts.palette();
-      const cumulativo = FinorCharts.cumulativeReturns(state.predicoes);
-      const teste = FinorCharts.cumulativeReturns(state.predicoes.slice(-252));
-      const scatter = state.predicoes.map(d => ({ observado: d.Observado, previsto: d.Previsto }));
-      const residuos = state.diagnosticos.map(d => ({ fitted: d.fitted, residuals: d.residuals }));
-      const topCoef = [...state.coef].sort((a,b) => Math.abs(b.coeficiente) - Math.abs(a.coeficiente)).slice(0,12);
-      const topVif = [...state.vif].sort((a,b) => b.vif - a.vif).slice(0,12);
-
-      FinorCharts.lineChart(document.getElementById('chart-completo'), cumulativo, { percent: true, series: [
-        { key: 'observado', label: 'Observado', color: colors.primary, width: 2.6 },
-        { key: 'previsto', label: 'Previsto', color: colors.secondary, width: 2.1, alpha: 0.74 }
-      ] });
-      FinorCharts.lineChart(document.getElementById('chart-teste'), teste, { percent: true, series: [
-        { key: 'observado', label: 'Observado', color: colors.primary, width: 2.4 },
-        { key: 'previsto', label: 'Previsto', color: colors.secondary, width: 2, alpha: 0.74 }
-      ] });
-      FinorCharts.scatterChart(document.getElementById('chart-scatter'), scatter, { xKey: 'observado', yKey: 'previsto', xLabel: 'Observado', percent: true, diagonal: true, color: colors.primary, alpha: 0.55, radius: 2.2 });
-      FinorCharts.heatmap(document.getElementById('chart-heatmap'), state.corr, { caption: 'Azul indica correlação negativa; laranja indica correlação positiva.' });
-      FinorCharts.scatterChart(document.getElementById('chart-residuos'), residuos, { xKey: 'fitted', yKey: 'residuals', xLabel: 'Valores ajustados', percent: false, zeroLine: true, color: colors.primary, alpha: 0.58, radius: 2.2 });
-      FinorCharts.scatterChart(document.getElementById('chart-qq'), state.qq, { xKey: 'theoretical', yKey: 'sample', xLabel: 'Quantis teóricos', percent: false, diagonal: true, color: colors.primary, alpha: 0.58, radius: 2.2 });
-      FinorCharts.barHorizontal(document.getElementById('chart-coeficientes'), topCoef, { labelKey: 'ativo', valueKey: 'coeficiente', limit: 12 });
-      FinorCharts.barHorizontal(document.getElementById('chart-vif'), topVif, { labelKey: 'ativo', valueKey: 'vif', limit: 12 });
-    }
-
-    function initCharts() {
-      try {
-        const data = window.FINOR_ICO2_DATA || {};
-        Object.assign(state, {
-          predicoes: data.predicoes || [],
-          diagnosticos: data.diagnosticos || [],
-          qq: data.qq || [],
-          vif: data.vif || [],
-          corr: data.corr || null,
-          coef: data.coef || []
-        });
-
-        if (!state.predicoes.length || !state.diagnosticos.length || !state.qq.length || !state.vif.length || !state.corr || !state.coef.length) {
-          throw new Error('Base ICO2 incompleta no pacote local.');
-        }
-
-        carregarTabelas();
-        drawAllCharts();
-      } catch (error) {
-        console.error(error);
-        chartIds.forEach(id => {
-          const canvas = document.getElementById(id);
-          if (canvas && window.FinorCharts) FinorCharts.message(canvas, 'Não foi possível carregar os dados do gráfico.');
-        });
-      }
-    }
-
-    const themeToggleBtn = document.getElementById('theme-toggle');
-    if (themeToggleBtn) themeToggleBtn.addEventListener('click', () => {
-      document.documentElement.classList.toggle('dark');
-      localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-      setTimeout(drawAllCharts, 40);
-    });
-
-    let resizeTimer;
-    window.addEventListener('resize', () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(drawAllCharts, 160);
-    });
-
-    window.addEventListener('load', initCharts);
-  </script>
+  <script src="assets/js/finor-data.js"></script><script src="assets/js/native-charts.js"></script><script src="assets/js/dashboard.js"></script>
 </body>
 </html>

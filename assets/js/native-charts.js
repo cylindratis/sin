@@ -258,6 +258,7 @@
       ctx.strokeStyle = s.color || c.primary;
       ctx.lineWidth = s.width || 2.2;
       ctx.globalAlpha = s.alpha || 1;
+      if (s.dash) ctx.setLineDash(s.dash);
       ctx.beginPath();
       data.forEach((d, i) => {
         const px = xScale(i);
