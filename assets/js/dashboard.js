@@ -30,14 +30,34 @@
     const revealObserver = new IntersectionObserver(entries => entries.forEach(entry => { if(entry.isIntersecting){ entry.target.classList.add('is-visible'); revealObserver.unobserve(entry.target); }}), { threshold:.18, rootMargin:'0px 0px -8% 0px'});
     qsa('[data-reveal-group], .brand-reveal, .fade-reveal').forEach(el => revealObserver.observe(el));
     initLogoSlider();
+    initMobileMenu();
   }
 
   function initLogoSlider(){
     const logos = qsa('.logo-slide');
     if(!logos.length) return;
-    const update = () => { const scrolled = window.scrollY > 40; logos.forEach(el => el.classList.toggle('is-scrolled', scrolled)); };
+    let showAuthors = false;
+    const update = () => logos.forEach(el => el.classList.toggle('is-scrolled', showAuthors));
     update();
-    window.addEventListener('scroll', update, { passive:true });
+    if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    setInterval(() => { showAuthors = !showAuthors; update(); }, 4000);
+  }
+
+  function initMobileMenu(){
+    qsa('[data-mobile-menu-button]').forEach(button => {
+      const menu = qs('#' + button.dataset.target);
+      if(!menu) return;
+      const close = () => { menu.classList.add('hidden'); button.setAttribute('aria-expanded', 'false'); };
+      button.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const isHidden = menu.classList.contains('hidden');
+        menu.classList.toggle('hidden', !isHidden);
+        button.setAttribute('aria-expanded', String(isHidden));
+      });
+      qsa('a', menu).forEach(link => link.addEventListener('click', close));
+      document.addEventListener('click', (event) => { if(!menu.contains(event.target) && !button.contains(event.target)) close(); });
+      window.addEventListener('resize', () => { if(window.innerWidth >= 768) close(); });
+    });
   }
 
   function renderHeroText(str){
@@ -72,8 +92,8 @@
     const chartRows = cumulativeMoney(rows, amount);
     const c = colors();
     const series = [
-      {key:'ico2_otima', label:'EOS k=6', color:c.primary, width:2.8},
-      {key:'ise_otima', label:'GAIA k=19', color:c.secondary, width:2.4}
+      {key:'ico2_otima', label:'EOS MAX', color:c.primary, width:2.8},
+      {key:'ise_otima', label:'GAIA MAX', color:c.secondary, width:2.4}
     ];
     if(homeState.series.ibov) series.push({key:'ibov', label:'IBOVESPA', color:c.ibov, width:1.9, dash:[6,5]});
     if(homeState.series.isus11) series.push({key:'isus11', label:'ISUS11', color:c.isus11, width:1.8, alpha:.78});
@@ -84,8 +104,8 @@
     if(cards){
       const last = chartRows[chartRows.length-1] || {};
       const allItems = [
-        ['ico2_otima','Carteira EOS k=6', true],
-        ['ise_otima','Carteira GAIA k=19', true],
+        ['ico2_otima','Carteira EOS MAX', true],
+        ['ise_otima','Carteira GAIA MAX', true],
         ['ibov','IBOVESPA', homeState.series.ibov],
         ['isus11','ISUS11', homeState.series.isus11],
         ['ecoo11','ECOO11', homeState.series.ecoo11]
@@ -122,7 +142,7 @@
     ],
     ISE: [
       { k:'14', label:'GAIA MAX', detail:'maior retorno total' },
-      { k:'18', label:'GAIA TKE', detail:'menor tracking-error' },
+      { k:'18', label:'GAIA TRE', detail:'menor tracking-error' },
       { k:'19', label:'GAIA IBV', detail:'maior correlação com ibovespa' }
     ]
   };
@@ -154,7 +174,8 @@
   function updatePortfolio(){
     const p = data.portfolios[portfolioState.index]; const k = String(portfolioState.k);
     const m = p.metricsByK[k] || {}; const s = p.statsByK[k] || {};
-    const pill = qs('#hero-k-pill'); if(pill) pill.textContent = `k=${k}`;
+    const currentChoice = choiceForK(portfolioState.index,k);
+    const pill = qs('#hero-k-pill'); if(pill) pill.textContent = currentChoice?.label || `k=${k}`;
     const roiCard = qs('#portfolio-roi-card'); if(roiCard) roiCard.textContent = `ROI ${fmtPct(m.retorno_total)}`;
     const heroCards = qs('#hero-metric-cards');
     if(heroCards) heroCards.innerHTML = [
@@ -186,10 +207,10 @@
   function drawPortfolioChart(){
     const canvas = qs('#portfolio-return-chart'); if(!canvas || !window.FinorCharts || !portfolioState.index) return;
     const c = colors(); const rows = buildPortfolioChartRows(); const series=[];
-    if(portfolioState.toggles.selected) series.push({key:'selected', label:`${indexLabel(portfolioState.index)} k=${portfolioState.k}`, color: portfolioState.index === 'ISE' ? c.secondary : c.primary, width:2.9});
+    if(portfolioState.toggles.selected) { const current = choiceForK(portfolioState.index, portfolioState.k); series.push({key:'selected', label: current?.label || `${indexLabel(portfolioState.index)} k=${portfolioState.k}`, color: portfolioState.index === 'ISE' ? c.secondary : c.primary, width:2.9}); }
     if(portfolioState.toggles.ibov) series.push({key:'ibov', label:'IBOVESPA', color:c.ibov, width:1.9, dash:[6,5], alpha:.82});
     if(portfolioState.toggles.etfs){ series.push({key:'isus11', label:'ISUS11', color:c.isus11, width:1.8, alpha:.78}); series.push({key:'ecoo11', label:'ECOO11', color:c.ecoo11, width:1.8, alpha:.72}); }
-    if(portfolioState.toggles.otimas){ series.push({key:'ico2_otima', label:'EOS k=6', color:c.primary, width:2.2, dash:[10,4], alpha:.62}); series.push({key:'ise_otima', label:'GAIA k=19', color:c.secondary, width:2.2, dash:[2,4], alpha:.62}); }
+    if(portfolioState.toggles.otimas){ series.push({key:'ico2_otima', label:'EOS MAX', color:c.primary, width:2.2, dash:[10,4], alpha:.62}); series.push({key:'ise_otima', label:'GAIA MAX', color:c.secondary, width:2.2, dash:[2,4], alpha:.62}); }
     if(!series.length) { FinorCharts.message(canvas, 'Ative pelo menos uma série.'); return; }
     FinorCharts.lineChart(canvas, rows, { percent:true, limit:520, series });
   }
@@ -225,6 +246,11 @@
       const tiny = n.w < 58 || n.h < 36;
       const small = n.w < 98 || n.h < 68;
       const alpha = Math.min(.88, .16 + (n.displayValue*2.9));
+      const compact = n.displayValue < 0.055 || n.h < 44;
+      const compactStyle = compact ? 'display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:8px;padding:0 8px;' : '';
+      if(compact){
+        return `<div class="tree-node" title="${n.label} • ${n.setor} • ${fmtPct(n.displayValue)}" style="left:${n.x}px;top:${n.y}px;width:${n.w}px;height:${n.h}px;background:rgba(255,90,25,${alpha});${compactStyle}"><strong class="font-geist-mono text-xs">${n.label}</strong><span class="font-geist-mono text-[10px]">${fmtPct(n.displayValue)}</span></div>`;
+      }
       return `<div class="tree-node" title="${n.label} • ${n.setor} • ${fmtPct(n.displayValue)}" style="left:${n.x}px;top:${n.y}px;width:${n.w}px;height:${n.h}px;background:rgba(255,90,25,${alpha});"><div><strong class="font-geist-mono ${tiny?'text-[10px]':small?'text-xs':'text-lg'}">${n.label}</strong>${small?'':`<p class="mt-1 text-xs opacity-75">${n.setor}</p>`}</div><span class="font-geist-mono ${tiny?'text-[9px]':small?'text-[10px]':'text-sm'}">${fmtPct(n.displayValue)}</span></div>`;
     }).join('');
   }
@@ -245,7 +271,7 @@
     const tbody = qs('#metrics-table'); if(!tbody) return;
     const header = qs('#metrics-first-header'); if(header) header.textContent = portfolioState.index === 'ISE' ? 'CARTEIRA' : 'CARTEIRAS';
     const rows = choicesFor(portfolioState.index);
-    tbody.innerHTML = rows.map(ch => { const k=String(ch.k); const r = p.metricsByK[k] || {}; const active = k===portfolioState.k; return `<tr class="border-t border-chumbo/5 dark:border-white/10 ${active?'bg-laranja/10':''}"><td class="py-3 font-bold ${active?'text-laranja':''}"><span class="block">${ch.label}</span><span class="block mt-1 font-geist-mono text-xs opacity-60">${ch.detail}</span></td><td class="py-3 text-right font-geist-mono">${fmtPct(r.retorno_total)}</td><td class="py-3 text-right font-geist-mono">${fmtPct(r.retorno_anualizado)}</td><td class="py-3 text-right font-geist-mono">${fmtPct(r.tracking_error_anualizado)}</td><td class="py-3 text-right font-geist-mono">${fmtPct(r.volatilidade_anualizada)}</td><td class="py-3 text-right font-geist-mono">${fmtNum(r.sharpe,3)}</td><td class="py-3 text-right font-geist-mono">${fmtPct(r.correlacao_ibov)}</td></tr>`; }).join('');
+    tbody.innerHTML = rows.map(ch => { const k=String(ch.k); const r = p.metricsByK[k] || {}; const active = k===portfolioState.k; return `<tr class="border-t border-chumbo/5 dark:border-white/10 ${active?'bg-laranja/10':''}"><td class="py-3 font-bold ${active?'text-laranja':''}"><span class="block">${ch.label}</span><span class="block mt-1 font-geist-mono text-xs opacity-60">${ch.detail}</span></td><td class="py-3 text-right font-geist-mono">${fmtPct(r.retorno_total)}</td><td class="py-3 text-right font-geist-mono">${fmtPct(r.retorno_anualizado)}</td><td class="py-3 text-right font-geist-mono">${fmtPct(r.tracking_error_diario,2)}</td><td class="py-3 text-right font-geist-mono">${fmtPct(r.volatilidade_anualizada)}</td><td class="py-3 text-right font-geist-mono">${fmtNum(r.sharpe,3)}</td><td class="py-3 text-right font-geist-mono">${fmtPct(r.correlacao_ibov)}</td></tr>`; }).join('');
   }
   function fillModelSummary(){
     const el = qs('#model-summary-cards'); if(!el || !data.ico2Model) return;
