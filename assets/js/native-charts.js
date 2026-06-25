@@ -392,6 +392,132 @@
     ctx.restore();
   }
 
+
+  function trianglePath(ctx, x, y, r, up) {
+    ctx.beginPath();
+    if (up) {
+      ctx.moveTo(x, y - r);
+      ctx.lineTo(x + r * 0.92, y + r * 0.72);
+      ctx.lineTo(x - r * 0.92, y + r * 0.72);
+    } else {
+      ctx.moveTo(x, y + r);
+      ctx.lineTo(x + r * 0.92, y - r * 0.72);
+      ctx.lineTo(x - r * 0.92, y - r * 0.72);
+    }
+    ctx.closePath();
+  }
+
+  function pcaClusterChart(canvas, rows, options = {}) {
+    const base = setup(canvas);
+    if (!base) return;
+    const { ctx, width, height } = base;
+    const c = palette();
+    const data = Array.isArray(rows) ? rows.filter(d => Number.isFinite(Number(d.PC1)) && Number.isFinite(Number(d.PC2))) : [];
+    if (!data.length) { message(canvas, 'Dados de PCA indisponíveis.'); return; }
+
+    const margin = { top: 44, right: 26, bottom: 54, left: 64 };
+    const x0 = margin.left;
+    const y0 = margin.top;
+    const w = width - margin.left - margin.right;
+    const h = height - margin.top - margin.bottom;
+    const xs = data.map(d => Number(d.PC1));
+    const ys = data.map(d => Number(d.PC2));
+    const [minX, maxX] = extent(xs, 0.16);
+    const [minY, maxY] = extent(ys, 0.16);
+    const xScale = v => x0 + ((v - minX) / (maxX - minX)) * w;
+    const yScale = v => y0 + (1 - ((v - minY) / (maxY - minY))) * h;
+
+    drawGrid(ctx, x0, y0, w, h, minY, maxY, { percent: false });
+
+    ctx.save();
+    ctx.strokeStyle = c.softGrid;
+    ctx.setLineDash([4, 6]);
+    if (minX < 0 && maxX > 0) {
+      const zx = xScale(0);
+      ctx.beginPath(); ctx.moveTo(zx, y0); ctx.lineTo(zx, y0 + h); ctx.stroke();
+    }
+    if (minY < 0 && maxY > 0) {
+      const zy = yScale(0);
+      ctx.beginPath(); ctx.moveTo(x0, zy); ctx.lineTo(x0 + w, zy); ctx.stroke();
+    }
+    ctx.restore();
+
+    const clusterStyles = {
+      '1': { fill: c.primary, alpha: .92, stroke: c.card },
+      '2': { fill: c.secondary, alpha: .74, stroke: c.card },
+      '3': { fill: c.muted, alpha: .82, stroke: c.card },
+      '4': { fill: c.primary, alpha: .42, stroke: c.secondary }
+    };
+
+    const clusters = Array.from(new Set(data.map(d => String(d.Cluster || '')))).filter(Boolean).sort((a,b)=>Number(a)-Number(b));
+    ctx.save();
+    ctx.font = '12px Geist Mono, monospace';
+    ctx.textBaseline = 'middle';
+    let lx = x0;
+    clusters.forEach(cl => {
+      const st = clusterStyles[cl] || clusterStyles['1'];
+      ctx.globalAlpha = st.alpha;
+      ctx.fillStyle = st.fill;
+      trianglePath(ctx, lx + 7, y0 - 21, 6, options.marker !== 'down');
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = c.muted;
+      ctx.fillText(`Cluster ${cl}`, lx + 20, y0 - 21);
+      lx += ctx.measureText(`Cluster ${cl}`).width + 54;
+    });
+    ctx.restore();
+
+    data.forEach((d) => {
+      const x = xScale(Number(d.PC1));
+      const y = yScale(Number(d.PC2));
+      const st = clusterStyles[String(d.Cluster)] || clusterStyles['1'];
+      const up = String(d.Marcador || '').toLowerCase().includes('up');
+      ctx.save();
+      ctx.globalAlpha = st.alpha;
+      ctx.fillStyle = st.fill;
+      ctx.strokeStyle = st.stroke;
+      ctx.lineWidth = 1.6;
+      trianglePath(ctx, x, y, 6.2, up);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.stroke();
+      ctx.fillStyle = c.text;
+      ctx.globalAlpha = .84;
+      ctx.font = '10px Geist Mono, monospace';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(d.Ativo || '').replace(/\.SA$/i, ''), x + 8, y - 2);
+      ctx.restore();
+    });
+
+    ctx.save();
+    ctx.fillStyle = c.muted;
+    ctx.font = '12px Geist Mono, monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    for (let i = 0; i <= 4; i++) {
+      const px = x0 + w * i / 4;
+      const value = minX + (maxX - minX) * i / 4;
+      ctx.fillText(niceNumber(value), px, y0 + h + 12);
+    }
+    ctx.font = '13px Geist, sans-serif';
+    ctx.fillText('PC1', x0 + w / 2, height - 18);
+    ctx.save();
+    ctx.translate(18, y0 + h / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('PC2', 0, 0);
+    ctx.restore();
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for (let i = 0; i <= 4; i++) {
+      const py = y0 + h * i / 4;
+      const value = maxY - (maxY - minY) * i / 4;
+      ctx.fillText(niceNumber(value), x0 - 10, py);
+    }
+    ctx.restore();
+  }
+
+
   function barHorizontal(canvas, rows, options) {
     const base = setup(canvas);
     if (!base) return;
@@ -694,6 +820,7 @@
     scatterChart,
     barHorizontal,
     heatmap,
+    pcaClusterChart,
     message,
     palette,
     installFullscreenButtons
