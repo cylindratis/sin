@@ -1,17 +1,18 @@
 <!DOCTYPE html>
+
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
     tailwind.config = { darkMode: 'class', theme: { extend: { colors: { gelo: '#f1eeee', chumbo: '#212121', laranja: '#ff5a19', darkbg: '#121212', darkcard: '#1e1e1e' } } } }
   </script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Geist:wght@100..900&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <style>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&amp;family=Geist:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
     .font-geist { font-family: 'Geist', sans-serif; }
     .font-geist-mono { font-family: 'Geist Mono', monospace; }
     html { scroll-behavior: smooth; }
@@ -42,178 +43,178 @@
     .tree-node { position:absolute; box-sizing:border-box; border:2px solid rgba(241,238,238,.8); overflow:hidden; padding:8px; display:flex; flex-direction:column; justify-content:space-between; background:rgba(255,90,25,.2); min-width:0; min-height:0; } .tree-node strong, .tree-node span { line-height:1.05; }
     .dark .tree-node { border-color:rgba(18,18,18,.88); }
     .table-scroll { max-height:480px; overflow:auto; }
-    .logo-slide { overflow:hidden; line-height:1; min-width:190px; }
-    .logo-slide-line { display:block; transform:translateY(110%); opacity:0; animation:logoSlideUp 850ms cubic-bezier(.16,1,.3,1) forwards; }
-    .logo-slide-authors { display:block; transform:translateY(110%); opacity:0; animation:logoSlideUp 850ms cubic-bezier(.16,1,.3,1) 140ms forwards; }
+    .logo-slide { overflow:hidden; line-height:1; min-width:300px; }
+    .logo-slider-window { display:block; height:1.45rem; overflow:hidden; transform:translateY(110%); opacity:0; animation:logoSlideUp 850ms cubic-bezier(.16,1,.3,1) forwards; }
+    .logo-slider-stack { display:block; transform:translateY(0); transition:transform 720ms cubic-bezier(.16,1,.3,1); }
+    .logo-slide.is-scrolled .logo-slider-stack { transform:translateY(-1.45rem); }
+    .logo-slider-line { display:block; height:1.45rem; line-height:1.45rem; white-space:nowrap; }
+    .logo-slider-authors { font-size:10px; letter-spacing:.16em; }
     .logo-amp { color:#ff5a19; }
     @keyframes logoSlideUp { to { transform:translateY(0); opacity:1; } }
 
     @media (prefers-reduced-motion: reduce){ .brand-reveal>span,.fade-reveal{transition:none;transform:none;opacity:1;} }
   </style>
-  <script>
+<script>
     if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
     else document.documentElement.classList.remove('dark');
   </script>
-  <title>EOS &amp; GAIA | Dashboard Sustentável</title>
+<title>EOS &amp; GAIA | Dashboard Sustentável</title>
 </head>
 <body class="bg-gelo text-chumbo dark:bg-darkbg dark:text-gelo font-geist selection:bg-laranja selection:text-white relative transition-colors duration-500">
-  <button id="theme-toggle" aria-label="Alternar tema" class="theme-floating fixed z-50 p-3 rounded-full bg-white dark:bg-darkcard shadow-lg border border-chumbo/5 dark:border-white/10 hover:scale-110 transition-transform cursor-pointer">
-    <i data-lucide="sun" class="w-5 h-5 text-laranja dark:hidden"></i><i data-lucide="moon" class="w-5 h-5 text-laranja hidden dark:block"></i>
-  </button>
-  <div class="fixed inset-0 w-full h-full overflow-hidden pointer-events-none z-0 opacity-20 dark:opacity-10"><div id="mouse-blob" class="w-[50vw] h-[50vw] max-w-[600px] max-h-[600px] rounded-full bg-laranja blur-[120px] mix-blend-multiply dark:mix-blend-screen"></div></div>
-  <header class="fixed top-0 left-0 right-0 z-40 px-6 md:px-12 py-5">
-    <nav class="max-w-7xl mx-auto flex items-center justify-between rounded-full bg-gelo/70 dark:bg-darkbg/70 glass-card border border-chumbo/5 dark:border-white/10 px-5 py-3 shadow-sm">
-      <a href="index.html#hero" class="logo-slide flex flex-col items-start gap-1 font-bold tracking-tight" aria-label="EOS &amp; GAIA — Brayan, Guilherme, Henrique e Melania"><span class="logo-slide-line text-base md:text-lg uppercase">EOS <span class="logo-amp">&amp;</span> GAIA</span><span class="logo-slide-authors font-geist-mono text-[9px] md:text-[10px] uppercase tracking-[0.16em] opacity-60 font-medium">Brayan, Guilherme, Henrique <span class="logo-amp">&amp;</span> Melania</span></a>
-      <div class="hidden md:flex items-center gap-6 text-sm font-medium opacity-80">
-        <a class="hover:text-laranja transition-colors" href="index.html#sobre">Sobre</a>
-        <a class="hover:text-laranja transition-colors" href="index.html#rentabilidade">Rentabilidade</a>
-        <a class="hover:text-laranja transition-colors" href="ico2.html">EOS</a>
-        <a class="hover:text-laranja transition-colors" href="ise.html">GAIA</a>
-        <a class="hover:text-laranja transition-colors" href="index.html#equipe">Equipe</a>
-      </div>
-    </nav>
-  </header>
-  <main class="relative z-10">
-    <section id="hero" class="min-h-screen flex flex-col justify-center p-6 md:p-12 lg:p-20 max-w-7xl mx-auto pt-28">
-      <div class="max-w-5xl w-full flex flex-col items-start text-left">
-        <span class="mb-8 inline-flex items-center gap-2 text-sm font-geist-mono uppercase tracking-[0.3em] text-laranja"><i data-lucide="sparkles" class="w-4 h-4"></i> Apresentando EOS &amp; GAIA</span>
-        <h1 class="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1]">É POSSÍVEL TER UMA CARTEIRA RENTÁVEL E SUSTENTÁVEL<span id="question-mark" class="inline-block transition-all duration-300 text-laranja opacity-100 scale-100">?</span><span id="dot-mark" class="text-laranja transition-all duration-300 opacity-0 scale-50 hidden-force">.</span></h1>
-        <div class="mt-4 md:mt-6 flex items-center justify-start w-full min-h-[3em] md:min-h-[1.5em]"><p class="text-5xl md:text-6xl lg:text-7xl font-bold text-laranja leading-[1.1]"><span id="typed-text"></span><span id="cursor" class="typing-cursor hidden-force"></span></p></div>
-        <div id="cta-container" class="mt-16 transition-all duration-1000 opacity-0 translate-y-8 pointer-events-none flex flex-wrap gap-4">
-          <a href="#rentabilidade" class="group inline-flex items-center gap-3 bg-chumbo text-white dark:bg-gelo dark:text-chumbo px-8 py-4 rounded-full font-medium text-lg hover:bg-laranja dark:hover:bg-laranja hover:text-white transition-colors duration-300 shadow-xl cursor-pointer">Ver Rentabilidade <i data-lucide="arrow-down" class="w-5 h-5 group-hover:translate-y-1 transition-transform"></i></a>
-          <a href="ico2.html" class="group inline-flex items-center gap-3 bg-white dark:bg-darkcard px-8 py-4 rounded-full font-medium text-lg border border-chumbo/5 dark:border-white/10 hover:border-laranja/50 transition-all shadow-sm">Carteira EOS <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform text-laranja"></i></a>
-        </div>
-      </div>
-    </section>
+<button aria-label="Alternar tema" class="theme-floating fixed z-50 p-3 rounded-full bg-white dark:bg-darkcard shadow-lg border border-chumbo/5 dark:border-white/10 hover:scale-110 transition-transform cursor-pointer" id="theme-toggle">
+<i class="w-5 h-5 text-laranja dark:hidden" data-lucide="sun"></i><i class="w-5 h-5 text-laranja hidden dark:block" data-lucide="moon"></i>
+</button>
+<div class="fixed inset-0 w-full h-full overflow-hidden pointer-events-none z-0 opacity-20 dark:opacity-10"><div class="w-[50vw] h-[50vw] max-w-[600px] max-h-[600px] rounded-full bg-laranja blur-[120px] mix-blend-multiply dark:mix-blend-screen" id="mouse-blob"></div></div>
+<header class="fixed top-0 left-0 right-0 z-40 px-6 md:px-12 py-5">
+<nav class="max-w-7xl mx-auto flex items-center justify-between rounded-full bg-gelo/70 dark:bg-darkbg/70 glass-card border border-chumbo/5 dark:border-white/10 px-5 py-3 shadow-sm">
+<a aria-label="EOS &amp; GAIA — Brayan, Guilherme, Henrique e Melania" class="logo-slide flex items-center font-bold tracking-tight" href="index.html#hero"><span class="logo-slider-window"><span class="logo-slider-stack"><span class="logo-slider-line text-base md:text-lg uppercase">EOS <span class="logo-amp">&amp;</span> GAIA</span><span class="logo-slider-line logo-slider-authors font-geist-mono uppercase opacity-70">Brayan, Guilherme, Henrique <span class="logo-amp">&amp;</span> Melania</span></span></span></a>
+<div class="hidden md:flex items-center gap-6 text-sm font-medium opacity-80">
+<a class="hover:text-laranja transition-colors" href="index.html#sobre">Sobre</a>
+<a class="hover:text-laranja transition-colors" href="index.html#rentabilidade">Rentabilidade</a>
+<a class="hover:text-laranja transition-colors" href="ico2.html">EOS</a>
+<a class="hover:text-laranja transition-colors" href="ise.html">GAIA</a>
+<a class="hover:text-laranja transition-colors" href="index.html#equipe">Equipe</a>
+</div>
+</nav>
+</header>
+<main class="relative z-10">
+<section class="min-h-screen flex flex-col justify-center p-6 md:p-12 lg:p-20 max-w-7xl mx-auto pt-28" id="hero">
+<div class="max-w-5xl w-full flex flex-col items-start text-left">
 
-    <section id="sobre" class="min-h-screen p-6 md:p-12 lg:p-20 max-w-7xl mx-auto pb-12">
-      <div class="mb-20 reveal-group" data-reveal-group>
-        <div class="grid grid-cols-1 lg:grid-cols-[0.92fr_1.08fr] gap-12 lg:gap-20 items-start">
-          <div>
-            <h2 class="text-4xl md:text-6xl lg:text-7xl font-bold leading-[0.98] tracking-tight">
-              <span class="brand-reveal"><span>Retorno financeiro</span></span>
-              <span class="brand-reveal text-laranja" style="--delay:110ms;"><span>&amp; redução de risco</span></span>
-              <span class="brand-reveal" style="--delay:220ms;"><span>climático</span></span>
-            </h2>
-          </div>
+<h1 class="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1]">É POSSÍVEL TER UMA CARTEIRA RENTÁVEL E SUSTENTÁVEL<span class="inline-block transition-all duration-300 text-laranja opacity-100 scale-100" id="question-mark">?</span><span class="text-laranja transition-all duration-300 opacity-0 scale-50 hidden-force" id="dot-mark">.</span></h1>
+<div class="mt-4 md:mt-6 flex items-center justify-start w-full min-h-[3em] md:min-h-[1.5em]"><p class="text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.1] text-chumbo dark:text-gelo"><span id="typed-text"></span><span class="typing-cursor hidden-force" id="cursor"></span></p></div>
+<div class="mt-16 transition-all duration-1000 opacity-0 translate-y-8 pointer-events-none flex flex-wrap gap-4" id="cta-container">
+<a class="group inline-flex items-center gap-3 bg-chumbo text-white dark:bg-gelo dark:text-chumbo px-8 py-4 rounded-full font-medium text-lg hover:bg-laranja dark:hover:bg-laranja hover:text-white transition-colors duration-300 shadow-xl cursor-pointer" href="#rentabilidade">Conheça sua nova carteira <i class="w-5 h-5 group-hover:translate-y-1 transition-transform" data-lucide="arrow-down"></i></a>
 
-          <div class="thesis-line pt-8 fade-reveal" style="--delay:220ms;">
-            <p class="text-xl md:text-3xl font-semibold leading-tight max-w-2xl">
+</div>
+</div>
+</section>
+<section class="min-h-screen p-6 md:p-12 lg:p-20 max-w-7xl mx-auto pb-12" id="sobre">
+<div class="mb-20 reveal-group" data-reveal-group="">
+<div class="grid grid-cols-1 lg:grid-cols-[0.92fr_1.08fr] gap-12 lg:gap-20 items-start">
+<div>
+<h2 class="text-4xl md:text-6xl lg:text-7xl font-bold leading-[0.98] tracking-tight">
+<span class="brand-reveal"><span>Retorno financeiro</span></span>
+<span class="brand-reveal text-laranja" style="--delay:110ms;"><span>&amp; redução de risco</span></span>
+<span class="brand-reveal" style="--delay:220ms;"><span>climático</span></span>
+</h2>
+</div>
+<div class="thesis-line pt-8 fade-reveal" style="--delay:220ms;">
+<p class="text-xl md:text-3xl font-semibold leading-tight max-w-2xl">
               Se você tivesse investido <span class="text-laranja">R$ 10.000</span> há 5 anos...
             </p>
-            <p class="mt-10 font-geist-mono text-xs uppercase tracking-[0.24em] opacity-60">Você teria hoje • carteira ótima EOS</p>
-            <div class="mt-3 flex flex-col gap-2">
-              <strong class="text-6xl md:text-8xl font-bold text-laranja leading-none tracking-tight">R$ 17.812</strong>
-              <span class="text-2xl md:text-4xl font-bold leading-tight opacity-85">vs. R$ 14.606 no IBOV</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="reveal-group" data-reveal-group>
-        <div class="grid grid-cols-1 lg:grid-cols-[0.92fr_1.08fr] gap-12 lg:gap-20 items-start">
-          <div class="lg:sticky lg:top-32 fade-reveal" style="--delay:80ms;">
-            <h3 class="text-4xl md:text-6xl lg:text-7xl font-bold leading-[0.98] tracking-tight">
+<p class="mt-10 font-geist-mono text-xs uppercase tracking-[0.24em] opacity-60">Você teria hoje • carteira ótima EOS</p>
+<div class="mt-3 flex flex-col gap-2">
+<strong class="text-6xl md:text-8xl font-bold text-laranja leading-none tracking-tight">R$ 17.812</strong>
+<span class="text-2xl md:text-4xl font-bold leading-tight opacity-85">vs. R$ 14.606 no IBOV</span>
+</div>
+</div>
+</div>
+</div>
+<div class="reveal-group" data-reveal-group="">
+<div class="grid grid-cols-1 lg:grid-cols-[0.92fr_1.08fr] gap-12 lg:gap-20 items-start">
+<div class="lg:sticky lg:top-32 fade-reveal" style="--delay:80ms;">
+<h3 class="text-4xl md:text-6xl lg:text-7xl font-bold leading-[0.98] tracking-tight">
               Seu capital acelera a transição e reduz o risco que ameaça o sistema.
             </h3>
-          </div>
-
-          <div class="thesis-line pt-8 fade-reveal" style="--delay:180ms;">
-            <div class="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-6 md:gap-10 items-start">
-              <div>
-                <div class="text-7xl md:text-8xl font-bold text-laranja leading-none">75%</div>
-                <p class="mt-2 font-geist-mono text-xs uppercase tracking-[0.24em] opacity-60">Valor Econômico</p>
-              </div>
-              <p class="text-xl md:text-3xl leading-snug font-semibold">
+</div>
+<div class="thesis-line pt-8 fade-reveal" style="--delay:180ms;">
+<div class="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-6 md:gap-10 items-start">
+<div>
+<div class="text-7xl md:text-8xl font-bold text-laranja leading-none">75%</div>
+<p class="mt-2 font-geist-mono text-xs uppercase tracking-[0.24em] opacity-60">Valor Econômico</p>
+</div>
+<p class="text-xl md:text-3xl leading-snug font-semibold">
                 das empresas que integravam a carteira em 2025 e seguiram em 2026 reduziram a intensidade de carbono em relação à receita.
               </p>
-            </div>
-            <p class="mt-10 text-base md:text-xl leading-relaxed opacity-80">
+</div>
+<p class="mt-10 text-base md:text-xl leading-relaxed opacity-80">
               Cada real investido com <span class="text-laranja font-semibold">EOS &amp; GAIA</span> financia a descarbonização da economia real, reduzindo a frequência e a severidade dos eventos climáticos extremos que propagam crises sistêmicas.
             </p>
-          </div>
-        </div>
-      </div>
-    </section>
+</div>
+</div>
+</div>
+</section>
+<section class="p-6 md:p-12 lg:p-20 max-w-7xl mx-auto border-t border-chumbo/5 dark:border-white/5" id="rentabilidade">
+<div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8 mb-8">
+<div><span class="text-laranja font-geist-mono text-sm uppercase tracking-[0.25em]">Rentabilidade</span><h3 class="text-3xl md:text-5xl font-bold mt-3">Performance histórica das carteiras</h3><p class="mt-4 max-w-3xl opacity-70 text-lg">Compare as carteiras ótimas EOS &amp; GAIA com IBOVESPA, ISUS11 e ECOO11. Ative ou desative os benchmarks e simule quanto teria virado um aporte inicial.</p></div>
+<div class="bg-white dark:bg-darkcard rounded-3xl p-4 border border-chumbo/5 dark:border-white/10 min-w-[280px]"><label class="block text-xs uppercase tracking-widest opacity-50 mb-2" for="home-amount">Valor investido</label><div class="flex items-center gap-2"><span class="font-geist-mono opacity-50">R$</span><input class="w-full bg-transparent text-3xl font-geist-mono font-bold outline-none" id="home-amount" inputmode="numeric" min="100" step="100" type="text" value="10.000"/></div></div>
+</div>
+<div class="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-6">
+<figure class="chart-card bg-white dark:bg-darkcard rounded-3xl p-4 md:p-6 border border-chumbo/5 dark:border-white/10">
+<div class="flex flex-col gap-4 mb-5">
+<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+<h4 class="text-xl font-bold">Evolução do valor investido</h4>
+<span class="font-geist-mono text-xs opacity-50" id="home-period-label">desde 2021</span>
+</div>
+<div class="flex flex-wrap gap-2" id="home-series-toggles">
+<label class="chip-toggle cursor-pointer"><input checked="" class="hidden" data-series="ibov" type="checkbox"/><span class="inline-flex px-4 py-2 rounded-full border border-chumbo/10 dark:border-white/10 bg-gelo dark:bg-white/5 text-sm font-semibold">IBOVESPA</span></label>
+<label class="chip-toggle cursor-pointer"><input checked="" class="hidden" data-series="isus11" type="checkbox"/><span class="inline-flex px-4 py-2 rounded-full border border-chumbo/10 dark:border-white/10 bg-gelo dark:bg-white/5 text-sm font-semibold">ISUS11</span></label>
+<label class="chip-toggle cursor-pointer"><input checked="" class="hidden" data-series="ecoo11" type="checkbox"/><span class="inline-flex px-4 py-2 rounded-full border border-chumbo/10 dark:border-white/10 bg-gelo dark:bg-white/5 text-sm font-semibold">ECOO11</span></label>
+</div>
+</div>
+<canvas aria-label="Gráfico comparativo de rentabilidade" class="native-chart-lg" id="home-profit-chart" role="img"></canvas>
+</figure>
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-6 content-start" id="home-result-cards"></div>
+</div>
+<div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+<a class="group bg-white dark:bg-darkcard rounded-3xl p-7 border border-chumbo/5 dark:border-white/10 hover:-translate-y-1 transition-all" href="ico2.html"><p class="font-geist-mono text-xs uppercase tracking-[0.25em] text-laranja mb-3">Carteira EOS</p><h4 class="text-2xl font-bold">Conheça a carteira de EOS</h4><p class="mt-3 opacity-65">Compare pesos, setores, ROI histórico e tracking-error.</p><span class="mt-6 inline-flex items-center gap-2 font-semibold text-laranja">Abrir análise <i class="w-4 h-4 group-hover:translate-x-1 transition-transform" data-lucide="arrow-right"></i></span></a><a class="group bg-white dark:bg-darkcard rounded-3xl p-7 border border-chumbo/5 dark:border-white/10 hover:-translate-y-1 transition-all" href="ise.html"><p class="font-geist-mono text-xs uppercase tracking-[0.25em] text-laranja mb-3">Carteira GAIA</p><h4 class="text-2xl font-bold">Conheça a carteira de GAIA</h4><p class="mt-3 opacity-65">Selecione o k, veja pesos, setores, treemap, ROI e métricas técnicas.</p><span class="mt-6 inline-flex items-center gap-2 font-semibold text-laranja">Abrir análise <i class="w-4 h-4 group-hover:translate-x-1 transition-transform" data-lucide="arrow-right"></i></span></a>
 
-    <section id="rentabilidade" class="p-6 md:p-12 lg:p-20 max-w-7xl mx-auto border-t border-chumbo/5 dark:border-white/5">
-      <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8 mb-8">
-        <div><span class="text-laranja font-geist-mono text-sm uppercase tracking-[0.25em]">Rentabilidade</span><h3 class="text-3xl md:text-5xl font-bold mt-3">Performance histórica das carteiras</h3><p class="mt-4 max-w-3xl opacity-70 text-lg">Compare as carteiras ótimas EOS &amp; GAIA com IBOVESPA, ISUS11 e ECOO11. Ative ou desative os benchmarks e simule quanto teria virado um aporte inicial.</p></div>
-        <div class="bg-white dark:bg-darkcard rounded-3xl p-4 border border-chumbo/5 dark:border-white/10 min-w-[280px]"><label for="home-amount" class="block text-xs uppercase tracking-widest opacity-50 mb-2">Valor investido</label><div class="flex items-center gap-2"><span class="font-geist-mono opacity-50">R$</span><input id="home-amount" type="number" min="100" step="100" value="10000" class="w-full bg-transparent text-3xl font-geist-mono font-bold outline-none"></div></div>
-      </div>
-      <div class="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-6">
-        <figure class="chart-card bg-white dark:bg-darkcard rounded-3xl p-4 md:p-6 border border-chumbo/5 dark:border-white/10">
-          <div class="flex flex-col gap-4 mb-5">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-              <h4 class="text-xl font-bold">Evolução do valor investido</h4>
-              <span id="home-period-label" class="font-geist-mono text-xs opacity-50">desde 2021</span>
-            </div>
-            <div class="flex flex-wrap gap-2" id="home-series-toggles">
-              <label class="chip-toggle cursor-pointer"><input type="checkbox" class="hidden" data-series="ibov" checked><span class="inline-flex px-4 py-2 rounded-full border border-chumbo/10 dark:border-white/10 bg-gelo dark:bg-white/5 text-sm font-semibold">IBOVESPA</span></label>
-              <label class="chip-toggle cursor-pointer"><input type="checkbox" class="hidden" data-series="isus11" checked><span class="inline-flex px-4 py-2 rounded-full border border-chumbo/10 dark:border-white/10 bg-gelo dark:bg-white/5 text-sm font-semibold">ISUS11</span></label>
-              <label class="chip-toggle cursor-pointer"><input type="checkbox" class="hidden" data-series="ecoo11" checked><span class="inline-flex px-4 py-2 rounded-full border border-chumbo/10 dark:border-white/10 bg-gelo dark:bg-white/5 text-sm font-semibold">ECOO11</span></label>
-            </div>
-          </div>
-          <canvas id="home-profit-chart" class="native-chart-lg" role="img" aria-label="Gráfico comparativo de rentabilidade"></canvas>
-        </figure>
-        <div id="home-result-cards" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-6 content-start"></div>
-      </div>
-      <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <a href="ise.html" class="group bg-white dark:bg-darkcard rounded-3xl p-7 border border-chumbo/5 dark:border-white/10 hover:-translate-y-1 transition-all"><p class="font-geist-mono text-xs uppercase tracking-[0.25em] text-laranja mb-3">Carteira GAIA</p><h4 class="text-2xl font-bold">Conheça a carteira de GAIA</h4><p class="mt-3 opacity-65">Selecione o k, veja pesos, setores, treemap, ROI e métricas técnicas.</p><span class="mt-6 inline-flex items-center gap-2 font-semibold text-laranja">Abrir análise <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i></span></a>
-        <a href="ico2.html" class="group bg-white dark:bg-darkcard rounded-3xl p-7 border border-chumbo/5 dark:border-white/10 hover:-translate-y-1 transition-all"><p class="font-geist-mono text-xs uppercase tracking-[0.25em] text-laranja mb-3">Carteira EOS</p><h4 class="text-2xl font-bold">Conheça a carteira de EOS</h4><p class="mt-3 opacity-65">Compare pesos, setores, ROI histórico e tracking-error.</p><span class="mt-6 inline-flex items-center gap-2 font-semibold text-laranja">Abrir análise <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i></span></a>
-      </div>
-    </section>
+</div>
+</section>
+<section class="p-6 md:p-12 lg:p-20 max-w-7xl mx-auto border-t border-chumbo/5 dark:border-white/5" id="equipe">
+<div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10"><div><h3 class="text-3xl md:text-5xl font-bold mt-3">Conheça a Equipe</h3></div></div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+<article class="group bg-white dark:bg-darkcard rounded-3xl p-5 border border-chumbo/5 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:-translate-y-1 transition-all duration-300 text-left">
+<div class="aspect-[4/3] rounded-2xl bg-gelo dark:bg-white/5 overflow-hidden mb-5 flex items-center justify-center border border-chumbo/5 dark:border-white/10">
+<img alt="Foto de Brayan" class="w-full h-full object-cover hidden" onload="this.classList.remove('hidden'); this.nextElementSibling.classList.add('hidden')" src="assets/team/brayan.jpg"/>
+<div class="w-20 h-20 rounded-full bg-laranja text-white flex items-center justify-center text-3xl font-bold font-geist-mono">B</div>
+</div>
+<h4 class="text-xl font-bold">Brayan</h4>
+<p class="mt-1 text-sm opacity-60">Equipe EOS &amp; GAIA</p>
+<a class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-laranja hover:gap-3 transition-all" href="https://www.linkedin.com/in/seu-linkedin/" rel="noopener" target="_blank">LinkedIn <i class="w-4 h-4" data-lucide="external-link"></i></a>
+</article>
 
-    <section id="equipe" class="p-6 md:p-12 lg:p-20 max-w-7xl mx-auto border-t border-chumbo/5 dark:border-white/5">
-      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10"><div><span class="text-laranja font-geist-mono text-sm uppercase tracking-[0.25em]">Equipe</span><h3 class="text-3xl md:text-5xl font-bold mt-3">Conheça a Equipe</h3></div><p class="max-w-xl opacity-70 text-left md:text-right">Cards editáveis para inserir foto, nome, curso e LinkedIn.</p></div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
-        <article class="group bg-white dark:bg-darkcard rounded-3xl p-5 border border-chumbo/5 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:-translate-y-1 transition-all duration-300 text-left">
-          <div class="aspect-[4/3] rounded-2xl bg-gelo dark:bg-white/5 overflow-hidden mb-5 flex items-center justify-center border border-chumbo/5 dark:border-white/10">
-            <img src="assets/team/brayan.jpg" alt="Foto de Brayan" class="w-full h-full object-cover hidden" onload="this.classList.remove('hidden'); this.nextElementSibling.classList.add('hidden')">
-            <div class="w-20 h-20 rounded-full bg-laranja text-white flex items-center justify-center text-3xl font-bold font-geist-mono">B</div>
-          </div>
-          <h4 class="text-xl font-bold">Brayan</h4>
-          <p class="mt-1 text-sm opacity-60">Equipe EOS &amp; GAIA</p>
-          <a href="https://www.linkedin.com/in/seu-linkedin/" target="_blank" rel="noopener" class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-laranja hover:gap-3 transition-all">LinkedIn <i data-lucide="external-link" class="w-4 h-4"></i></a>
-        </article>
-        <article class="group bg-white dark:bg-darkcard rounded-3xl p-5 border border-chumbo/5 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:-translate-y-1 transition-all duration-300 text-left">
-          <div class="aspect-[4/3] rounded-2xl bg-gelo dark:bg-white/5 overflow-hidden mb-5 flex items-center justify-center border border-chumbo/5 dark:border-white/10">
-            <img src="assets/team/gabriel.jpg" alt="Foto de Gabriel" class="w-full h-full object-cover hidden" onload="this.classList.remove('hidden'); this.nextElementSibling.classList.add('hidden')">
-            <div class="w-20 h-20 rounded-full bg-laranja text-white flex items-center justify-center text-3xl font-bold font-geist-mono">G</div>
-          </div>
-          <h4 class="text-xl font-bold">Gabriel</h4>
-          <p class="mt-1 text-sm opacity-60">Equipe EOS &amp; GAIA</p>
-          <a href="https://www.linkedin.com/in/seu-linkedin/" target="_blank" rel="noopener" class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-laranja hover:gap-3 transition-all">LinkedIn <i data-lucide="external-link" class="w-4 h-4"></i></a>
-        </article>
-        <article class="group bg-white dark:bg-darkcard rounded-3xl p-5 border border-chumbo/5 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:-translate-y-1 transition-all duration-300 text-left">
-          <div class="aspect-[4/3] rounded-2xl bg-gelo dark:bg-white/5 overflow-hidden mb-5 flex items-center justify-center border border-chumbo/5 dark:border-white/10">
-            <img src="assets/team/guilherme.jpg" alt="Foto de Guilherme" class="w-full h-full object-cover hidden" onload="this.classList.remove('hidden'); this.nextElementSibling.classList.add('hidden')">
-            <div class="w-20 h-20 rounded-full bg-laranja text-white flex items-center justify-center text-3xl font-bold font-geist-mono">G</div>
-          </div>
-          <h4 class="text-xl font-bold">Guilherme</h4>
-          <p class="mt-1 text-sm opacity-60">Equipe EOS &amp; GAIA</p>
-          <a href="https://www.linkedin.com/in/seu-linkedin/" target="_blank" rel="noopener" class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-laranja hover:gap-3 transition-all">LinkedIn <i data-lucide="external-link" class="w-4 h-4"></i></a>
-        </article>
-        <article class="group bg-white dark:bg-darkcard rounded-3xl p-5 border border-chumbo/5 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:-translate-y-1 transition-all duration-300 text-left">
-          <div class="aspect-[4/3] rounded-2xl bg-gelo dark:bg-white/5 overflow-hidden mb-5 flex items-center justify-center border border-chumbo/5 dark:border-white/10">
-            <img src="assets/team/henrique.jpg" alt="Foto de Henrique" class="w-full h-full object-cover hidden" onload="this.classList.remove('hidden'); this.nextElementSibling.classList.add('hidden')">
-            <div class="w-20 h-20 rounded-full bg-laranja text-white flex items-center justify-center text-3xl font-bold font-geist-mono">H</div>
-          </div>
-          <h4 class="text-xl font-bold">Henrique</h4>
-          <p class="mt-1 text-sm opacity-60">Equipe EOS &amp; GAIA</p>
-          <a href="https://www.linkedin.com/in/seu-linkedin/" target="_blank" rel="noopener" class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-laranja hover:gap-3 transition-all">LinkedIn <i data-lucide="external-link" class="w-4 h-4"></i></a>
-        </article>
-        <article class="group bg-white dark:bg-darkcard rounded-3xl p-5 border border-chumbo/5 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:-translate-y-1 transition-all duration-300 text-left">
-          <div class="aspect-[4/3] rounded-2xl bg-gelo dark:bg-white/5 overflow-hidden mb-5 flex items-center justify-center border border-chumbo/5 dark:border-white/10">
-            <img src="assets/team/melania.jpg" alt="Foto de Melania" class="w-full h-full object-cover hidden" onload="this.classList.remove('hidden'); this.nextElementSibling.classList.add('hidden')">
-            <div class="w-20 h-20 rounded-full bg-laranja text-white flex items-center justify-center text-3xl font-bold font-geist-mono">M</div>
-          </div>
-          <h4 class="text-xl font-bold">Melania</h4>
-          <p class="mt-1 text-sm opacity-60">Equipe EOS &amp; GAIA</p>
-          <a href="https://www.linkedin.com/in/seu-linkedin/" target="_blank" rel="noopener" class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-laranja hover:gap-3 transition-all">LinkedIn <i data-lucide="external-link" class="w-4 h-4"></i></a>
-        </article></div>
-    </section>
-  </main>
-  <script src="assets/js/finor-data.js"></script><script src="assets/js/native-charts.js"></script><script src="assets/js/dashboard.js"></script>
+<article class="group bg-white dark:bg-darkcard rounded-3xl p-5 border border-chumbo/5 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:-translate-y-1 transition-all duration-300 text-left">
+<div class="aspect-[4/3] rounded-2xl bg-gelo dark:bg-white/5 overflow-hidden mb-5 flex items-center justify-center border border-chumbo/5 dark:border-white/10">
+<img alt="Foto de Guilherme" class="w-full h-full object-cover hidden" onload="this.classList.remove('hidden'); this.nextElementSibling.classList.add('hidden')" src="assets/team/guilherme.jpg"/>
+<div class="w-20 h-20 rounded-full bg-laranja text-white flex items-center justify-center text-3xl font-bold font-geist-mono">G</div>
+</div>
+<h4 class="text-xl font-bold">Guilherme</h4>
+<p class="mt-1 text-sm opacity-60">Equipe EOS &amp; GAIA</p>
+<a class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-laranja hover:gap-3 transition-all" href="https://www.linkedin.com/in/seu-linkedin/" rel="noopener" target="_blank">LinkedIn <i class="w-4 h-4" data-lucide="external-link"></i></a>
+</article>
+<article class="group bg-white dark:bg-darkcard rounded-3xl p-5 border border-chumbo/5 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:-translate-y-1 transition-all duration-300 text-left">
+<div class="aspect-[4/3] rounded-2xl bg-gelo dark:bg-white/5 overflow-hidden mb-5 flex items-center justify-center border border-chumbo/5 dark:border-white/10">
+<img alt="Foto de Henrique" class="w-full h-full object-cover hidden" onload="this.classList.remove('hidden'); this.nextElementSibling.classList.add('hidden')" src="assets/team/henrique.jpg"/>
+<div class="w-20 h-20 rounded-full bg-laranja text-white flex items-center justify-center text-3xl font-bold font-geist-mono">H</div>
+</div>
+<h4 class="text-xl font-bold">Henrique</h4>
+<p class="mt-1 text-sm opacity-60">Equipe EOS &amp; GAIA</p>
+<a class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-laranja hover:gap-3 transition-all" href="https://www.linkedin.com/in/seu-linkedin/" rel="noopener" target="_blank">LinkedIn <i class="w-4 h-4" data-lucide="external-link"></i></a>
+</article>
+<article class="group bg-white dark:bg-darkcard rounded-3xl p-5 border border-chumbo/5 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:-translate-y-1 transition-all duration-300 text-left">
+<div class="aspect-[4/3] rounded-2xl bg-gelo dark:bg-white/5 overflow-hidden mb-5 flex items-center justify-center border border-chumbo/5 dark:border-white/10">
+<img alt="Foto de Melania" class="w-full h-full object-cover hidden" onload="this.classList.remove('hidden'); this.nextElementSibling.classList.add('hidden')" src="assets/team/melania.jpg"/>
+<div class="w-20 h-20 rounded-full bg-laranja text-white flex items-center justify-center text-3xl font-bold font-geist-mono">M</div>
+</div>
+<h4 class="text-xl font-bold">Melania</h4>
+<p class="mt-1 text-sm opacity-60">Equipe EOS &amp; GAIA</p>
+<a class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-laranja hover:gap-3 transition-all" href="https://www.linkedin.com/in/seu-linkedin/" rel="noopener" target="_blank">LinkedIn <i class="w-4 h-4" data-lucide="external-link"></i></a>
+</article></div>
+</section>
+
+<section class="p-6 md:p-12 lg:p-20 max-w-7xl mx-auto border-t border-chumbo/5 dark:border-white/5" id="bootcamp">
+<div class="rounded-[2rem] bg-darkbg text-gelo p-8 md:p-10 border border-white/10 shadow-[0_24px_80px_rgba(0,0,0,0.18)]">
+<p class="font-geist-mono text-xs md:text-sm uppercase tracking-[0.24em] text-laranja mb-6">um projeto do 5º Bootcamp de DataScience.</p>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+<div class="flex items-center justify-center md:justify-start"><svg aria-label="Fundo Amanhã" class="h-12 md:h-14 w-auto max-w-[240px]" role="img" viewbox="0 0 705 122" xmlns="http://www.w3.org/2000/svg"><defs><style>.st0{fill:#fff;}</style></defs><path class="st0" d="M31.13,101.86v-60.42c0-3.16.54-5.92,1.63-8.29,1.09-2.37,2.78-4.23,5.08-5.58,2.3-1.35,5.23-2.02,8.79-2.02h16v6.61h-14.02c-1.78,0-3.37.25-4.79.74-1.42.49-2.52,1.38-3.31,2.67-.79,1.28-1.19,3.11-1.19,5.48v60.82h-8.2ZM17.6,47.75h39.99v6.61H17.6v-6.61ZM13.36,95.24h48.18v6.61H13.36v-6.61Z"></path><path class="st0" d="M118.4,47.75v54.11h-7.7l-.49-13.03v-41.07h8.19ZM78.91,47.75v34.36c0,4.15,1.2,7.5,3.6,10.07,2.4,2.57,5.58,3.85,9.53,3.85,4.41,0,8.33-1.66,11.75-4.99,3.42-3.32,5.92-8.38,7.5-15.15l1.48,10.56c-1.97,5.4-4.92,9.51-8.84,12.34-3.92,2.83-8.28,4.25-13.08,4.25-4.08,0-7.62-.87-10.61-2.62-3-1.74-5.33-4.16-7.01-7.26-1.68-3.09-2.52-6.71-2.52-10.86v-34.56h8.19Z"></path><path class="st0" d="M171.9,101.86v-34.36c0-4.15-1.2-7.5-3.6-10.07-2.4-2.57-5.58-3.85-9.53-3.85-4.41,0-8.33,1.66-11.75,4.99-3.42,3.32-5.92,8.38-7.5,15.15l-1.48-10.56c1.97-5.4,4.92-9.51,8.84-12.34,3.91-2.83,8.28-4.25,13.08-4.25,4.08,0,7.62.87,10.61,2.62,2.99,1.74,5.33,4.16,7.01,7.26,1.68,3.1,2.52,6.71,2.52,10.86v34.56h-8.19ZM132.41,101.86v-54.1h7.7l.49,13.03v41.07h-8.19Z"></path><path class="st0" d="M216.96,96.03c3.75,0,7.14-1.04,10.17-3.11,3.03-2.07,5.23-4.92,6.61-8.54v-19.25c-1.38-3.69-3.59-6.53-6.61-8.54-3.03-2.01-6.42-3.01-10.17-3.01s-6.76.87-9.43,2.62c-2.67,1.74-4.74,4.21-6.22,7.4-1.48,3.19-2.22,6.93-2.22,11.21s.74,7.92,2.22,11.11c1.48,3.19,3.55,5.68,6.22,7.45,2.67,1.78,5.81,2.67,9.43,2.67M215.38,46.57c3.88,0,7.44.81,10.66,2.42,3.22,1.61,5.79,3.83,7.7,6.66v-26.16h8.1v72.37h-7.6l-.3-8.2c-1.91,2.83-4.48,5.1-7.7,6.81-3.23,1.71-6.85,2.57-10.86,2.57-4.81,0-9.05-1.2-12.74-3.6-3.69-2.4-6.58-5.73-8.69-9.97-2.11-4.25-3.16-9.13-3.16-14.66s1.05-10.51,3.16-14.76c2.1-4.25,5-7.55,8.69-9.92,3.69-2.37,7.93-3.55,12.74-3.55"></path><path class="st0" d="M279.27,96.13c5.79,0,10.33-1.91,13.62-5.73,3.29-3.82,4.94-9.02,4.94-15.6s-1.65-11.86-4.94-15.65c-3.29-3.78-7.83-5.68-13.62-5.68s-10.24,1.89-13.53,5.68c-3.29,3.79-4.94,9-4.94,15.65s1.65,11.78,4.94,15.6c3.29,3.82,7.8,5.73,13.53,5.73M279.27,103.04c-5.53,0-10.29-1.14-14.27-3.41-3.98-2.27-7.04-5.53-9.18-9.77-2.14-4.24-3.21-9.26-3.21-15.06s1.07-10.89,3.21-15.11c2.14-4.21,5.2-7.46,9.18-9.73,3.98-2.27,8.74-3.41,14.27-3.41,8.36,0,14.91,2.52,19.65,7.55,4.74,5.04,7.11,11.93,7.11,20.68,0,5.79-1.07,10.81-3.21,15.06-2.14,4.24-5.2,7.5-9.18,9.77-3.98,2.27-8.77,3.41-14.37,3.41"></path><path class="st0" d="M352.32,74.5h-8.1c-10.65,0-15.7,3.06-15.7,10.07,0,5.2,3.44,9.19,9.94,9.19,12.25,0,13.85-8.34,13.85-17.57v-1.7ZM364.44,88.21c0,5.32.45,11.95.79,13.49h-11.88c-.45-1.22-.79-4.07-.88-6.71-2.04,3.57-6.33,8.06-17.05,8.06-13.66,0-19.46-8.93-19.46-17.73,0-12.92,10.24-18.85,27.2-18.85h9.11v-4.31c0-4.65-1.55-9.91-10.87-9.91-8.38,0-9.93,3.95-10.84,8.3h-11.91c.8-8.87,6.29-17.64,23.18-17.57,14.59.06,22.6,5.9,22.6,19.2v26.04Z"></path><path class="st0" d="M375.94,59.11c0-4.95,0-10.03-.11-14.79h11.92c.18,1.59.46,5.38.48,7.99,2.74-4.77,7.58-9.34,16.38-9.34,8.17,0,13.32,4.18,15.43,9.63,3.19-5.13,8.41-9.63,18.03-9.63s18.13,5.77,18.13,21.04v37.68h-12.16v-36.17c0-6.04-2.18-12.24-10.1-12.24s-11.71,5.92-11.71,15.52v32.89h-12.18v-35.74c0-6.77-1.83-12.6-9.9-12.6s-11.91,5.99-11.91,16.46v31.88h-12.29v-42.59Z"></path><path class="st0" d="M501.37,74.5h-8.1c-10.65,0-15.7,3.06-15.7,10.07,0,5.2,3.44,9.19,9.94,9.19,12.25,0,13.85-8.34,13.85-17.57v-1.7ZM513.49,88.21c0,5.32.45,11.95.79,13.49h-11.88c-.45-1.22-.79-4.07-.88-6.71-2.04,3.57-6.33,8.06-17.05,8.06-13.66,0-19.46-8.93-19.46-17.73,0-12.92,10.24-18.85,27.2-18.85h9.11v-4.31c0-4.65-1.55-9.91-10.87-9.91-8.38,0-9.93,3.95-10.84,8.3h-11.91c.8-8.87,6.29-17.64,23.18-17.57,14.59.06,22.6,5.9,22.6,19.2v26.04Z"></path><path class="st0" d="M525.05,58.77c0-4.94,0-10.1-.11-14.46h12.05c.29,1.6.46,6.77.48,8.54,2.15-4.37,6.81-9.88,17.46-9.88s19.1,7.09,19.1,21.99v36.73h-12.42v-35.26c0-7.74-2.86-13.09-10.89-13.09-9.11,0-13.26,6.35-13.26,17.29v31.05h-12.42v-42.92Z"></path><path class="st0" d="M598.32,29.49v22.59c2.76-4.48,7.74-9.1,17.29-9.1s19.28,5.58,19.28,22.02v36.7h-12.36v-34.75c0-8.79-3.51-13.6-11.15-13.6-9.69,0-13.07,6.71-13.07,17.36v30.98h-12.42V29.49h12.42Z"></path><path class="st0" d="M679.45,74.5h-8.1c-10.65,0-15.7,3.06-15.7,10.07,0,5.2,3.44,9.19,9.94,9.19,12.25,0,13.85-8.34,13.85-17.57v-1.7ZM651.14,34.58v-3.15c0-8.42,3.9-11.37,9.67-11.37,6.46,0,11.65,5.21,15.47,5.21,1.97,0,3.03-.98,3.03-4.37v-1.09h8.2v2.61c0,9.36-4.12,12.34-10,12.34-6.64,0-11.01-5.19-15.24-5.19-1.76,0-2.74.91-2.74,3.28v1.72h-8.38ZM691.57,88.21c0,5.32.45,11.95.79,13.49h-11.88c-.45-1.22-.79-4.07-.88-6.71-2.04,3.57-6.33,8.06-17.05,8.06-13.66,0-19.46-8.93-19.46-17.73,0-12.92,10.24-18.85,27.2-18.85h9.11v-4.31c0-4.65-1.55-9.91-10.87-9.91-8.38,0-9.93,3.95-10.84,8.3h-11.91c.8-8.87,6.29-17.64,23.18-17.57,14.59.06,22.6,5.9,22.6,19.2v26.04Z"></path></svg></div>
+<div class="flex items-center justify-center"><img alt="BAH" class="max-h-12 md:max-h-14 w-auto object-contain" src="https://www.somosbah.com/wp-content/uploads/2023/12/logo_bah_completo_light-1024x191.png"/></div>
+<div class="flex items-center justify-center md:justify-end"><img alt="FINOR" class="max-h-14 md:max-h-16 w-auto object-contain" src="https://static.wixstatic.com/media/e40d35_442bf40450c04e9f8b6212d84d1a56e6~mv2.png/v1/crop/x_76,y_315,w_912,h_445/fill/w_183,h_88,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Logo%20Finor%20Artefact.png"/></div>
+</div>
+</div>
+</section>
+</main>
+<script src="assets/js/finor-data.js"></script><script src="assets/js/native-charts.js"></script><script src="assets/js/dashboard.js"></script>
 </body>
 </html>
