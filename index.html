@@ -44,20 +44,20 @@
     .dark .tree-node { border-color:rgba(18,18,18,.88); }
     .table-scroll { max-height:480px; overflow:auto; }
     .logo-slide { overflow:hidden; line-height:1; min-width:300px; }
-    .logo-slider-window { display:block; height:1.45rem; overflow:hidden; transform:translateY(110%); opacity:0; animation:logoSlideUp 850ms cubic-bezier(.16,1,.3,1) forwards; }
+    .logo-slider-window { --logo-slide-step:1.45rem; display:block; height:var(--logo-slide-step); overflow:hidden; transform:translateY(110%); opacity:0; animation:logoSlideUp 850ms cubic-bezier(.16,1,.3,1) forwards; }
     .logo-slider-stack { display:block; transform:translateY(0); transition:transform 720ms cubic-bezier(.16,1,.3,1); }
-    .logo-slide.is-scrolled .logo-slider-stack { transform:translateY(-1.45rem); }
-    .logo-slider-line { display:block; height:1.45rem; line-height:1.45rem; white-space:nowrap; }
+    .logo-slide.is-scrolled .logo-slider-stack { transform:translateY(calc(-1 * var(--logo-slide-step))); }
+    .logo-slider-line { display:flex; align-items:center; height:var(--logo-slide-step); line-height:1; white-space:nowrap; }
     .logo-slider-authors { font-size:10px; letter-spacing:.16em; }
+    .logo-author-part { display:inline; }
     .logo-amp { color:#ff5a19; }
     @keyframes logoSlideUp { to { transform:translateY(0); opacity:1; } }
 
 
     .mobile-menu-panel { box-shadow: 0 24px 80px rgba(0,0,0,.16); }
-    .logo-slide.is-scrolled .logo-slider-stack { transform:translateY(-1.45rem); }
     #hero-metric-cards strong { font-size:50px; line-height:1; }
     #model-summary-cards .rounded-2xl p { white-space:nowrap; }
-    @media (max-width:767px){ .logo-slide{min-width:0; max-width:70%;} .logo-slider-line{font-size:.9rem;} .logo-slider-authors{font-size:8px; letter-spacing:.08em;} }
+    @media (max-width:767px){ .logo-slide{min-width:0; max-width:76%;} .logo-slider-window{--logo-slide-step:2.55rem;} .logo-slider-line{font-size:.9rem;} .logo-slider-authors{font-size:8px; letter-spacing:.08em; line-height:1.15; white-space:normal; flex-direction:column; align-items:flex-start; justify-content:center; gap:2px;} .logo-author-part{display:block;} }
 
     @media (prefers-reduced-motion: reduce){ .brand-reveal>span,.fade-reveal{transition:none;transform:none;opacity:1;} }
   </style>
@@ -74,7 +74,7 @@
 <div class="fixed inset-0 w-full h-full overflow-hidden pointer-events-none z-0 opacity-20 dark:opacity-10"><div class="w-[50vw] h-[50vw] max-w-[600px] max-h-[600px] rounded-full bg-laranja blur-[120px] mix-blend-multiply dark:mix-blend-screen" id="mouse-blob"></div></div>
 <header class="fixed top-0 left-0 right-0 z-40 px-6 md:px-12 py-5">
 <nav class="relative max-w-7xl mx-auto flex items-center justify-between rounded-full bg-gelo/70 dark:bg-darkbg/70 glass-card border border-chumbo/5 dark:border-white/10 px-5 py-3 shadow-sm">
-<a aria-label="EOS &amp; GAIA — Brayan, Guilherme, Henrique e Melania" class="logo-slide flex items-center font-bold tracking-tight" href="index.html#hero"><span class="logo-slider-window"><span class="logo-slider-stack"><span class="logo-slider-line text-base md:text-lg uppercase">EOS <span class="logo-amp">&amp;</span> GAIA</span><span class="logo-slider-line logo-slider-authors font-geist-mono uppercase opacity-70">Brayan, Guilherme, Henrique <span class="logo-amp">&amp;</span> Melania</span></span></span></a>
+<a aria-label="EOS &amp; GAIA — Brayan, Guilherme, Henrique e Melânia" class="logo-slide flex items-center font-bold tracking-tight" href="index.html#hero"><span class="logo-slider-window"><span class="logo-slider-stack"><span class="logo-slider-line text-base md:text-lg uppercase">EOS <span class="logo-amp">&amp;</span> GAIA</span><span class="logo-slider-line logo-slider-authors font-geist-mono uppercase opacity-70"><span class="logo-author-part">Brayan, Guilherme,</span><span class="logo-author-part">Henrique <span class="logo-amp">&amp;</span> Melânia</span></span></span></span></a>
 <div class="hidden md:flex items-center gap-6 text-sm font-medium opacity-80">
 <a class="hover:text-laranja transition-colors" href="index.html#sobre">Sobre</a>
 <a class="hover:text-laranja transition-colors" href="ico2.html">EOS</a>
@@ -204,7 +204,7 @@
 </article>
 <article class="group bg-white dark:bg-darkcard rounded-3xl p-5 border border-chumbo/5 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:-translate-y-1 transition-all duration-300 text-left">
 <div class="aspect-[4/3] rounded-2xl bg-gelo dark:bg-white/5 overflow-hidden mb-5 flex items-center justify-center border border-chumbo/5 dark:border-white/10">
-<img alt="Foto de Melania" class="w-full h-full object-cover hidden" onload="this.classList.remove('hidden'); this.nextElementSibling.classList.add('hidden')" src="assets/team/melania.jpg"/>
+<img alt="Foto de Melânia" class="w-full h-full object-cover hidden" onload="this.classList.remove('hidden'); this.nextElementSibling.classList.add('hidden')" src="assets/team/melania.jpg"/>
 <div class="w-20 h-20 rounded-full bg-laranja text-white flex items-center justify-center text-3xl font-bold font-geist-mono">M</div>
 </div>
 <h4 class="text-xl font-bold">Melânia B.</h4>
