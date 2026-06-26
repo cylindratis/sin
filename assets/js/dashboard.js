@@ -8,6 +8,7 @@
   function qsa(sel, root=document){ return Array.from(root.querySelectorAll(sel)); }
   function fmtPct(v, digits=1){ const n=Number(v||0)*100; return n.toLocaleString('pt-BR',{minimumFractionDigits:digits,maximumFractionDigits:digits})+'%'; }
   function fmtNum(v, digits=2){ return Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:digits,maximumFractionDigits:digits}); }
+  function fmtDecimal(v, digits=6){ return Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:digits,maximumFractionDigits:digits}); }
   function fmtMoney(v){ return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0}); }
   function parseBRNumber(value){ const raw = String(value || '').replace(/\D/g,''); return raw ? Number(raw) : 0; }
   function fmtThousands(value){ return Number(value || 0).toLocaleString('pt-BR', { maximumFractionDigits: 0 }); }
@@ -271,7 +272,7 @@
     const tbody = qs('#metrics-table'); if(!tbody) return;
     const header = qs('#metrics-first-header'); if(header) header.textContent = portfolioState.index === 'ISE' ? 'CARTEIRA' : 'CARTEIRAS';
     const rows = choicesFor(portfolioState.index);
-    tbody.innerHTML = rows.map(ch => { const k=String(ch.k); const r = p.metricsByK[k] || {}; const active = k===portfolioState.k; return `<tr class="border-t border-chumbo/5 dark:border-white/10 ${active?'bg-laranja/10':''}"><td class="py-3 font-bold ${active?'text-laranja':''}"><span class="block">${ch.label}</span><span class="block mt-1 font-geist-mono text-xs opacity-60">${ch.detail}</span></td><td class="py-3 text-right font-geist-mono">${fmtPct(r.retorno_total)}</td><td class="py-3 text-right font-geist-mono">${fmtPct(r.retorno_anualizado)}</td><td class="py-3 text-right font-geist-mono">${fmtPct(r.tracking_error_diario,2)}</td><td class="py-3 text-right font-geist-mono">${fmtPct(r.volatilidade_anualizada)}</td><td class="py-3 text-right font-geist-mono">${fmtNum(r.sharpe,3)}</td><td class="py-3 text-right font-geist-mono">${fmtPct(r.correlacao_ibov)}</td></tr>`; }).join('');
+    tbody.innerHTML = rows.map(ch => { const k=String(ch.k); const r = p.metricsByK[k] || {}; const active = k===portfolioState.k; return `<tr class="border-t border-chumbo/5 dark:border-white/10 ${active?'bg-laranja/10':''}"><td class="py-3 font-bold ${active?'text-laranja':''}"><span class="block">${ch.label}</span><span class="block mt-1 font-geist-mono text-xs opacity-60">${ch.detail}</span></td><td class="py-3 text-right font-geist-mono">${fmtPct(r.retorno_total)}</td><td class="py-3 text-right font-geist-mono">${fmtPct(r.retorno_anualizado)}</td><td class="py-3 text-right font-geist-mono">${fmtDecimal(r.tracking_error_diario,6)}</td><td class="py-3 text-right font-geist-mono">${fmtPct(r.volatilidade_anualizada)}</td><td class="py-3 text-right font-geist-mono">${fmtNum(r.sharpe,3)}</td><td class="py-3 text-right font-geist-mono">${fmtPct(r.correlacao_ibov)}</td></tr>`; }).join('');
   }
   function fillModelSummary(){
     const el = qs('#model-summary-cards'); if(!el || !data.ico2Model) return;
