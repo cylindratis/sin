@@ -21,9 +21,9 @@
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
     #mouse-blob { position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); }
     .glass-card { backdrop-filter:blur(18px); }
-    .theme-floating { top:22px; right:1rem; }
+    .theme-floating { top:30px; right:1.75rem; width:46px; height:46px; display:flex; align-items:center; justify-content:center; }
     body > header { right:5.25rem!important; padding-right:0!important; }
-    @media (min-width:768px){ .theme-floating{top:22px;right:3rem;} body>header{right:7.25rem!important;padding-right:0!important;} }
+    @media (min-width:768px){ .theme-floating{top:22px;right:3rem;width:auto;height:auto;} body>header{right:7.25rem!important;padding-right:0!important;} }
     @media (max-width:767px){ body>header{right:4.75rem!important;padding-left:1rem!important;} }
     .native-chart { width:100%; height:380px; display:block; }
     .native-chart-lg { width:100%; height:520px; display:block; }
@@ -48,7 +48,8 @@
     .logo-slider-stack { display:block; transform:translateY(0); transition:transform 720ms cubic-bezier(.16,1,.3,1); }
     .logo-slide.is-scrolled .logo-slider-stack { transform:translateY(calc(-1 * var(--logo-slide-step))); }
     .logo-slider-line { display:flex; align-items:center; height:var(--logo-slide-step); line-height:1; white-space:nowrap; }
-    .logo-slider-authors { font-size:10px; letter-spacing:.16em; }
+    .logo-slider-authors { font-size:13px; letter-spacing:.12em; }
+    .logo-author-part + .logo-author-part::before { content:" "; }
     .logo-author-part { display:inline; }
     .logo-amp { color:#ff5a19; }
     @keyframes logoSlideUp { to { transform:translateY(0); opacity:1; } }
@@ -57,7 +58,7 @@
     .mobile-menu-panel { box-shadow: 0 24px 80px rgba(0,0,0,.16); }
     #hero-metric-cards strong { font-size:50px; line-height:1; }
     #model-summary-cards .rounded-2xl p { white-space:nowrap; }
-    @media (max-width:767px){ .logo-slide{min-width:0; max-width:76%;} .logo-slider-window{--logo-slide-step:2.55rem;} .logo-slider-line{font-size:.9rem;} .logo-slider-authors{font-size:8px; letter-spacing:.08em; line-height:1.15; white-space:normal; flex-direction:column; align-items:flex-start; justify-content:center; gap:2px;} .logo-author-part{display:block;} }
+    @media (max-width:767px){ .logo-slide{min-width:0; max-width:76%;} .logo-slider-window{--logo-slide-step:2.75rem;} .logo-slider-line{font-size:.9rem;} .logo-slider-authors{font-size:13px; letter-spacing:.02em; line-height:1.15; white-space:normal; flex-direction:column; align-items:flex-start; justify-content:center; gap:3px;} .logo-author-part{display:block;} .logo-author-part + .logo-author-part::before{content:"";} }
 
     @media (prefers-reduced-motion: reduce){ .brand-reveal>span,.fade-reveal{transition:none;transform:none;opacity:1;} }
   </style>
@@ -82,7 +83,7 @@
 <a class="hover:text-laranja transition-colors" href="index.html#equipe">Equipe</a>
 </div>
 <button aria-expanded="false" aria-label="Abrir menu" class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-full border border-chumbo/10 dark:border-white/10 bg-white/70 dark:bg-white/5 text-laranja" data-mobile-menu-button data-target="mobile-menu"><i class="w-5 h-5" data-lucide="menu"></i></button>
-<div class="mobile-menu-panel hidden md:hidden absolute left-0 right-0 top-[calc(100%+0.75rem)] rounded-3xl bg-gelo/95 dark:bg-darkbg/95 glass-card border border-chumbo/5 dark:border-white/10 p-3">
+<div id="mobile-menu" class="mobile-menu-panel hidden md:hidden absolute left-0 right-0 top-[calc(100%+0.75rem)] rounded-3xl bg-gelo/95 dark:bg-darkbg/95 glass-card border border-chumbo/5 dark:border-white/10 p-3">
 <a class="block rounded-2xl px-4 py-3 hover:bg-laranja hover:text-white transition-colors" href="index.html#sobre">Sobre</a>
 <a class="block rounded-2xl px-4 py-3 hover:bg-laranja hover:text-white transition-colors" href="ico2.html">EOS</a>
 <a class="block rounded-2xl px-4 py-3 hover:bg-laranja hover:text-white transition-colors" href="ise.html">GAIA</a>
